@@ -1,0 +1,91 @@
+syntax="proto3";
+
+service CourseService {
+  rpc UpdateCourseDatabase(UpdateCourseDatabaseRequest) returns (UpdateCourseDatabaseResponse);
+  rpc GetCourses(GetCoursesRequest) returns (GetCoursesResponse);
+  rpc ListAllCourses(ListAllCoursesRequest) returns (ListAllCoursesResponse);
+}
+
+message UpdateCourseDatabaseRequest {
+  int32 year = 1;
+}
+
+message UpdateCourseDatabaseResponse {
+  repeated ReportCourseData insertedCourses = 1;
+  repeated ReportCourseData updatedCourses = 2;
+}
+
+message ReportCourseData {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+}
+
+message CourseSchedule {
+  enum Module {
+    SpringA = 0;
+    SpringB = 1;
+    SpringC = 2;
+    FallA = 3;
+    FallB = 4;
+    FallC = 5;
+    SummerVacation = 6;
+    SpringVacation = 7;
+    Annual = 8;
+    UnknownModule = 9;
+  }
+  
+  enum Day { 
+    Sun = 0;
+    Mon = 1;
+    Tue = 2;
+    Wed = 3;
+    Thu = 4;
+    Fri = 5;
+    Sat = 6;
+    Intensive = 7;
+    Appointment = 8;
+    AnyTime = 9;
+    UnknownDay = 10;
+  }
+  Module module = 1;
+  Day day = 2;
+  int32 period = 3;
+  string room = 4;
+}
+
+message Course {
+  enum CourseMethod {
+    OnlineAsynchronous = 0;
+    OnlineSynchronous = 1;
+    FaceToFace = 2;
+    Others = 3;
+  } 
+  string id = 1;
+  int32 year = 2;
+  string code = 3;
+  string name = 4;
+  string instructor = 5;
+  float credit = 6;
+  string overview = 7;
+  string remarks = 8;
+  string lastUpdate = 9;
+  repeated int32 recomendedGrades = 10;
+  repeated CourseMethod methods = 11;
+  repeated CourseSchedule schedules = 12;
+  bool hasParseError = 13;
+}
+
+message GetCoursesRequest {
+  repeated string ids = 1;
+}
+
+message GetCoursesResponse {
+  repeated Course courses = 1;
+}
+
+message ListAllCoursesRequest {}
+
+message ListAllCoursesResponse {
+  repeated Course courses = 1;
+}
