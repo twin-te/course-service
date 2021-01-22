@@ -1,0 +1,1 @@
+create database twinte_course_service;
