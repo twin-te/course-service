@@ -66,6 +66,7 @@ test('不正データ', async () => {
   ).rejects.toBeTruthy()
 })
 
-afterAll(() => {
+afterAll(async () => {
+  await clearDB()
   disconnectDatabase()
 })

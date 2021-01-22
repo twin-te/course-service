@@ -31,6 +31,7 @@ test('すべてのコースを取得できる', async () => {
     )
 })
 
-afterAll(() => {
+afterAll(async () => {
+  await clearDB()
   disconnectDatabase()
 })

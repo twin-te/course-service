@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node ./src/index.ts",
+    "dev": "ts-node ./src/index.ts",
+    "build": "tsc",
     "proto": "./proto-gen.sh",
     "test": "jest --runInBand --coverage"
   },
