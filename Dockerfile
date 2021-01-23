@@ -14,6 +14,8 @@ RUN yarn build
 FROM node:14-alpine
 WORKDIR /usr/src/app
 
+LABEL org.opencontainers.image.source https://github.com/twin-te/course-service
+
 COPY --from=build-env /usr/src/app/dist ./dist
 COPY --from=build-env /usr/src/app/generated ./generated
 COPY --from=build-env /usr/src/app/package.json .
