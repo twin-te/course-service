@@ -5,6 +5,9 @@ import { CourseMethod } from './model/courseMethod'
 import { CourseRecommendedGrade } from './model/courseRecommendedGrade'
 import { CourseSchedule } from './model/courseSchedule'
 
+/**
+ * postgresへ接続
+ */
 export function connectDatabase() {
   return createConnection({
     type: 'postgres',
@@ -18,6 +21,9 @@ export function connectDatabase() {
   })
 }
 
+/**
+ * postgresから切断
+ */
 export function disconnectDatabase() {
   return getConnection().close()
 }

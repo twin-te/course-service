@@ -1,18 +1,21 @@
 syntax="proto3";
 
 service CourseService {
+  /* kdbから最新の情報を取得し、データベースを更新する */
   rpc UpdateCourseDatabase(UpdateCourseDatabaseRequest) returns (UpdateCourseDatabaseResponse);
+  /* 指定されたidの講義情報を取得する */
   rpc GetCourses(GetCoursesRequest) returns (GetCoursesResponse);
+  /* データベースが持つ全てのコースを取得する */
   rpc ListAllCourses(ListAllCoursesRequest) returns (ListAllCoursesResponse);
 }
 
 message UpdateCourseDatabaseRequest {
-  int32 year = 1;
+  int32 year = 1; // 対象年度
 }
 
 message UpdateCourseDatabaseResponse {
-  repeated ReportCourseData insertedCourses = 1;
-  repeated ReportCourseData updatedCourses = 2;
+  repeated ReportCourseData insertedCourses = 1; // 新たに追加された講義
+  repeated ReportCourseData updatedCourses = 2; // 内容が更新された講義
 }
 
 message ReportCourseData {
@@ -48,6 +51,7 @@ message CourseSchedule {
     AnyTime = 9;
     UnknownDay = 10;
   }
+
   Module module = 1;
   Day day = 2;
   int32 period = 3;
@@ -73,7 +77,7 @@ message Course {
   repeated int32 recomendedGrades = 10;
   repeated CourseMethod methods = 11;
   repeated CourseSchedule schedules = 12;
-  bool hasParseError = 13;
+  bool hasParseError = 13; // パースエラーが発生した場合（情報の信憑性が薄い場合）trueになる
 }
 
 message GetCoursesRequest {

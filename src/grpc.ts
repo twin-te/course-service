@@ -4,6 +4,9 @@ import { courseService } from './courseService'
 
 let server: Server
 
+/**
+ * grpcサーバー起動
+ */
 export function startServer() {
   return new Promise<void>((resolve, reject) => {
     server = new Server()
@@ -19,6 +22,9 @@ export function startServer() {
   })
 }
 
+/**
+ * grpcサーバー停止
+ */
 export function stopServer() {
   server.forceShutdown()
 }

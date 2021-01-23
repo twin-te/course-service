@@ -17,6 +17,9 @@ import { updateCourseDatabaseUseCase } from './usecase/updateCourseDatabase'
 import { Course as dbCourse } from './model/course'
 import { listAllCoursesUseCase } from './usecase/listAllCourses'
 
+/**
+ * grpcサーバのCourseService実装
+ */
 export const courseService: ICourseServiceServer = {
   async updateCourseDatabase(
     call: ServerUnaryCall<
@@ -64,7 +67,7 @@ export const courseService: ICourseServiceServer = {
     getCoursesUseCase(call.request.getIdsList())
       .then((courses) => {
         const res = new GetCoursesResponse()
-        res.setCoursesList(courses.map(convertCourse))
+        res.setCoursesList(courses.map(createGrpcCourse))
         callback(null, res)
       })
       .catch((r) => callback(r))
@@ -76,13 +79,17 @@ export const courseService: ICourseServiceServer = {
   ) {
     listAllCoursesUseCase().then((courses) => {
       const res = new ListAllCoursesResponse()
-      res.setCoursesList(courses.map(convertCourse))
+      res.setCoursesList(courses.map(createGrpcCourse))
       callback(null, res)
     })
   },
 }
 
-function convertCourse(c: dbCourse): Course {
+/**
+ * grpcの構造体へ変換
+ * @param c データベースのCourseModel
+ */
+function createGrpcCourse(c: dbCourse): Course {
   const d = new Course()
   d.setId(c.id)
   d.setCode(c.code)

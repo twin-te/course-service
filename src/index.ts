@@ -1,9 +1,9 @@
-import dotenv from 'dotenv'
 import { connectDatabase } from './db'
 import { startServer } from './grpc'
 
-dotenv.config()
-
+/**
+ * エントリポイント
+ */
 const main = async () => {
   await connectDatabase()
   console.log('pg connected')

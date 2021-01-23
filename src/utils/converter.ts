@@ -9,6 +9,10 @@ import { CourseRecommendedGrade } from '../model/courseRecommendedGrade'
 import { CourseSchedule } from '../model/courseSchedule'
 import { Module, Day, CourseMethod as CourseMethodEnum } from '../model/enums'
 
+/**
+ * パーサのModule enumをデータベースのenumへ変換
+ * @param m パーサのModule
+ */
 export function createDBModule(m: PModule): Module {
   switch (m) {
     case PModule.SpringA:
@@ -34,6 +38,10 @@ export function createDBModule(m: PModule): Module {
   }
 }
 
+/**
+ * パーサのDay enumをデータベースのenum変換
+ * @param d パーサのDay
+ */
 export function createDBDay(d: PDay): Day {
   switch (d) {
     case PDay.Sun:
@@ -61,6 +69,10 @@ export function createDBDay(d: PDay): Day {
   }
 }
 
+/**
+ * kdb備考欄から開講形式を取得する
+ * @param remarks 備考欄の文字列
+ */
 export function parseCourseMethod(remarks: string): CourseMethodEnum[] {
   const res: CourseMethodEnum[] = []
   if (remarks.includes('対面')) res.push(CourseMethodEnum.FaceToFace)
@@ -70,6 +82,12 @@ export function parseCourseMethod(remarks: string): CourseMethodEnum[] {
   return res
 }
 
+/**
+ * パーサの結果からデータベースEntityを生成する
+ * @param c パーサから出力されたコース
+ * @param year 年度
+ * @param id primary key uuid
+ */
 export function createDBCourse(c: PCourse, year: number, id: string): Course {
   const target = new Course()
   target.id = id
