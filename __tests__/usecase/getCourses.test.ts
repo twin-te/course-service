@@ -36,6 +36,11 @@ test('指定した授業データが取得できる', async () => {
   )
 })
 
+test('存在しないidの情報は帰らない', async () => {
+  const res = await getCoursesUseCase([v4(), v4()])
+  expect(res.length).toBe(0)
+})
+
 afterAll(() => {
   disconnectDatabase()
 })

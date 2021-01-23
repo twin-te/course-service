@@ -1,4 +1,4 @@
-import { sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
+import { Metadata, sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
 import { ICourseServiceServer } from '../generated/protos/CourseService_grpc_pb'
 import {
   Course,
@@ -16,6 +16,7 @@ import { getCoursesUseCase } from './usecase/getCourses'
 import { updateCourseDatabaseUseCase } from './usecase/updateCourseDatabase'
 import { Course as dbCourse } from './model/course'
 import { listAllCoursesUseCase } from './usecase/listAllCourses'
+import { Status } from '@grpc/grpc-js/build/src/constants'
 
 /**
  * grpcサーバのCourseService実装
@@ -28,8 +29,8 @@ export const courseService: ICourseServiceServer = {
     >,
     callback: sendUnaryData<UpdateCourseDatabaseResponse>
   ) {
-    const res = new UpdateCourseDatabaseResponse()
     try {
+      const res = new UpdateCourseDatabaseResponse()
       const courses = await fetchCoursesFromKdbUseCase(call.request.getYear())
       const updateResult = await updateCourseDatabaseUseCase(
         call.request.getYear(),
@@ -60,28 +61,44 @@ export const courseService: ICourseServiceServer = {
     }
   },
 
-  getCourses(
+  async getCourses(
     call: ServerUnaryCall<GetCoursesRequest, GetCoursesResponse>,
     callback: sendUnaryData<GetCoursesResponse>
   ) {
-    getCoursesUseCase(call.request.getIdsList())
-      .then((courses) => {
-        const res = new GetCoursesResponse()
-        res.setCoursesList(courses.map(createGrpcCourse))
-        callback(null, res)
-      })
-      .catch((r) => callback(r))
+    try {
+      const res = new GetCoursesResponse()
+      const ids = call.request.getIdsList()
+      const courses = await getCoursesUseCase(ids)
+      if (courses.length !== call.request.getIdsList().length) {
+        const metadata = new Metadata()
+        const missing = ids.filter((i) => !courses.find((c) => c.id === i))
+        metadata.set('ids', missing.join(','))
+        callback({
+          code: Status.NOT_FOUND,
+          details: `指定されたIDの講義が見つかりませんでした。詳細はmetadataを参照してください。`,
+          metadata,
+        })
+        return
+      }
+      res.setCoursesList(courses.map(createGrpcCourse))
+      callback(null, res)
+    } catch (e) {
+      callback(e)
+    }
   },
 
-  listAllCourses(
+  async listAllCourses(
     call: ServerUnaryCall<ListAllCoursesRequest, ListAllCoursesResponse>,
     callback: sendUnaryData<ListAllCoursesResponse>
   ) {
-    listAllCoursesUseCase().then((courses) => {
+    try {
+      const courses = await listAllCoursesUseCase()
       const res = new ListAllCoursesResponse()
       res.setCoursesList(courses.map(createGrpcCourse))
       callback(null, res)
-    })
+    } catch (e) {
+      callback(e)
+    }
   },
 }
 
