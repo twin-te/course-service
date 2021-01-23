@@ -1,0 +1,10 @@
+name: test
+on: [push]
+jobs:
+  exec-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: cd .devcontainer
+      - run: docker-compose up -d
+      - run: docker-compose exec node bash -c "cd /workspace && yarn test"
