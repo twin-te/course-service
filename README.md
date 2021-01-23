@@ -1,7 +1,7 @@
 ![test](https://github.com/twin-te/course-service/workflows/test/badge.svg)
 
 # twinte-course-service
-時間割アプリ Twin:te - https://app.twinte.net のバックエンドの一部です。
+時間割アプリ Twin:te - https://app.twinte.net のv3バックエンドの一部です。
 
 kdbから講義情報の取得と管理を行います。
 
@@ -32,13 +32,13 @@ Docker + VSCodeを推奨します。
 
 `yarn client`を実行するとcliでgrpcリクエストを送れる[grpcc](https://github.com/njpatel/grpcc)が利用できます。
 
-# バックエンドサービス一覧
+# v3バックエンドサービス一覧
  - API Gateway
  - Auth Callback
  - User Service
  - Session Service
  - Timetable Service
- - Course Service
+ - Course Service (here)
  - Search Service
  - Donation Service
  - School Calendar Service
