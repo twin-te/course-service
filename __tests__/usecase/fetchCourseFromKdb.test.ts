@@ -1,11 +1,15 @@
 import { NoCoursesFoundError } from 'twinte-parser/dist/kdbDownloader'
 import { fetchCoursesFromKdbUseCase } from '../../src/usecase/fetchCoursesFromKdb'
 
-test('存在しない年次を指定したときにエラーになる', async () => {
-  await expect(fetchCoursesFromKdbUseCase(9999)).rejects.toBeInstanceOf(
-    NoCoursesFoundError
-  )
-})
+test(
+  '存在しない年次を指定したときにエラーになる',
+  async () => {
+    await expect(fetchCoursesFromKdbUseCase(9999)).rejects.toBeInstanceOf(
+      NoCoursesFoundError
+    )
+  },
+  1000 * 60 * 10
+)
 
 test(
   '存在する年次を指定したときに何かしらのデータが帰ってくる',
