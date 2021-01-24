@@ -37,6 +37,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.2.2",
     "google-protobuf": "^3.14.0",
+    "log4js": "^6.3.0",
     "pg": "^8.5.1",
     "reflect-metadata": "^0.1.13",
     "twinte-parser": "^2.1.0",

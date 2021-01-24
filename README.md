@@ -10,11 +10,11 @@ kdbから講義情報の取得と管理を行います。
 
 | 環境変数名  | 説明                             | default               |
 |------------|----------------------------------|-----------------------|
-| PGHOST     | Postgres接続先のホスト名         | postgres              |
-| PGPORT     | Postgres接続先のポート番号       | 5432                  |
-| PGDATABASE | Postgres接続先のデータベース名   | twinte_course_service |
-| PGUSER     | Postgres接続に使用するユーザー名 | postgres              |
-| PGPASSWORD | Postgres接続に使用するパスワード | postgres              |
+| PG_HOST     | Postgres接続先のホスト名         | postgres              |
+| PG_PORT     | Postgres接続先のポート番号       | 5432                  |
+| PG_DATABASE | Postgres接続先のデータベース名   | twinte_course_service |
+| PG_USER     | Postgres接続に使用するユーザー名 | postgres              |
+| PG_PASSWORD | Postgres接続に使用するパスワード | postgres              |
 
 # 開発方法
 Docker + VSCodeを推奨します。

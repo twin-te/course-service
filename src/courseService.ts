@@ -17,11 +17,16 @@ import { updateCourseDatabaseUseCase } from './usecase/updateCourseDatabase'
 import { Course as dbCourse } from './model/course'
 import { listAllCoursesUseCase } from './usecase/listAllCourses'
 import { Status } from '@grpc/grpc-js/build/src/constants'
+import { grpcLogger as logger } from './logger'
+import {
+  ServerErrorResponse,
+  ServerStatusResponse,
+} from '@grpc/grpc-js/build/src/server-call'
 
 /**
  * grpcサーバのCourseService実装
  */
-export const courseService: ICourseServiceServer = {
+export const courseService: ICourseServiceServer = applyLogger({
   async updateCourseDatabase(
     call: ServerUnaryCall<
       UpdateCourseDatabaseRequest,
@@ -100,7 +105,7 @@ export const courseService: ICourseServiceServer = {
       callback(e)
     }
   },
-}
+})
 
 /**
  * grpcの構造体へ変換
@@ -131,4 +136,43 @@ function createGrpcCourse(c: dbCourse): Course {
   )
   d.setHasparseerror(c.hasParseError)
   return d
+}
+
+function applyLogger<T extends { [name: string]: any }>(impl: T): T {
+  Object.getOwnPropertyNames(impl)
+    .filter((k) => typeof impl[k] === 'function')
+    .forEach((k) => {
+      const originalImpl = impl[k]
+      impl[k] = function (
+        call: ServerUnaryCall<any, any>,
+        callback: sendUnaryData<any>
+      ) {
+        if (logger.isTraceEnabled())
+          logger.trace('REQUEST', originalImpl.name, call.request.toObject())
+        else logger.info('REQUEST', originalImpl.name)
+
+        const originalCallback = callback
+        callback = function (
+          error: ServerErrorResponse | ServerStatusResponse | null,
+          value?: any | null,
+          trailer?: Metadata,
+          flags?: number
+        ) {
+          if (error) logger.error('RESPONSE', originalImpl.name, error)
+          else if (logger.isTraceEnabled())
+            logger.trace('RESPONSE', originalImpl.name, {
+              error,
+              value: JSON.stringify(value),
+              trailer,
+              flags,
+            })
+          else logger.info('RESPONSE', originalImpl.name, 'ok')
+
+          originalCallback(error, value, trailer, flags)
+        }
+        // @ts-ignore
+        originalImpl(call, callback)
+      }
+    })
+  return impl
 }

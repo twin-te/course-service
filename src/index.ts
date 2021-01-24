@@ -1,16 +1,23 @@
 import { connectDatabase } from './db'
 import { startServer } from './grpc'
+import { logger } from './logger'
 
 /**
  * エントリポイント
  */
 const main = async () => {
+  logger.info('service is starting.')
   await connectDatabase()
-  console.log('pg connected')
   await startServer()
-  console.log('grpc server start')
+  logger.info('ready.')
 }
 
-main()
+process.on('uncaughtException', (err) => {
+  logger.fatal('uncaughtException\n', err)
+})
 
-export default main
+process.on('unhandledRejection', (reason, p) => {
+  logger.fatal('unhandledRejection\n', p, reason)
+})
+
+main()

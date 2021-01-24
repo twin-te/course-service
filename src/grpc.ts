@@ -1,6 +1,7 @@
 import { ServerCredentials, Server } from '@grpc/grpc-js'
 import { CourseServiceService } from '../generated/protos/CourseService_grpc_pb'
 import { courseService } from './courseService'
+import { logger } from './logger'
 
 let server: Server
 
@@ -15,8 +16,14 @@ export function startServer() {
       '0.0.0.0:50051',
       ServerCredentials.createInsecure(),
       () => {
-        server.start()
-        resolve()
+        try {
+          server.start()
+          logger.info('grpc server started.')
+          resolve()
+        } catch (e) {
+          logger.fatal('cannot start grpc server.', e)
+          process.exit(1)
+        }
       }
     )
   })
