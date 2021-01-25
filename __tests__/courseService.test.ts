@@ -132,6 +132,36 @@ test('getCourses:notfound', async (done) => {
   })
 })
 
+test('getCourses:notfound2', async (done) => {
+  const testids = [v4(), v4()]
+  mocked(getCoursesUseCase).mockImplementation(async (ids) => [
+    createDBCourse(testData[0], 2020, testids[0]),
+  ])
+  const req = new GetCoursesRequest()
+  req.setIdsList(testids)
+  client.getCourses(req, (err, _) => {
+    expect(err).toBeTruthy()
+    if (!err) throw new Error()
+    expect(err.code).toBe(Status.NOT_FOUND)
+    expect(typeof err.metadata.get('ids')[0]).toBe('string')
+    expect(err.metadata.get('ids')[0]).toEqual(testids[1])
+    done()
+  })
+})
+
+test('getCourses:duplicated ids', async (done) => {
+  const testid = v4()
+  mocked(getCoursesUseCase).mockImplementation(async (ids) => [])
+  const req = new GetCoursesRequest()
+  req.setIdsList([testid, testid])
+  client.getCourses(req, (err, _) => {
+    expect(err).toBeTruthy()
+    if (!err) throw new Error()
+    expect(err.code).toBe(Status.INVALID_ARGUMENT)
+    done()
+  })
+})
+
 test('listAllCourses', async (done) => {
   mocked(listAllCoursesUseCase).mockImplementation(async () =>
     testData.map((c) => createDBCourse(c, 2020, v4()))

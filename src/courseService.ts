@@ -1,4 +1,9 @@
-import { Metadata, sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js'
+import {
+  Metadata,
+  sendUnaryData,
+  ServerUnaryCall,
+  UntypedServiceImplementation,
+} from '@grpc/grpc-js'
 import { ICourseServiceServer } from '../generated/protos/CourseService_grpc_pb'
 import {
   Course,
@@ -73,6 +78,15 @@ export const courseService: ICourseServiceServer = applyLogger({
     try {
       const res = new GetCoursesResponse()
       const ids = call.request.getIdsList()
+
+      if (ids.length !== [...new Set(ids)].length) {
+        callback({
+          code: Status.INVALID_ARGUMENT,
+          details: `指定された引数に重複したidが含まれています。`,
+        })
+        return
+      }
+
       const courses = await getCoursesUseCase(ids)
       if (courses.length !== call.request.getIdsList().length) {
         const metadata = new Metadata()
@@ -138,7 +152,8 @@ function createGrpcCourse(c: dbCourse): Course {
   return d
 }
 
-function applyLogger<T extends { [name: string]: any }>(impl: T): T {
+function applyLogger<T extends UntypedServiceImplementation>(i: T): T {
+  const impl = i as UntypedServiceImplementation
   Object.getOwnPropertyNames(impl)
     .filter((k) => typeof impl[k] === 'function')
     .forEach((k) => {
@@ -174,5 +189,5 @@ function applyLogger<T extends { [name: string]: any }>(impl: T): T {
         originalImpl(call, callback)
       }
     })
-  return impl
+  return impl as T
 }
