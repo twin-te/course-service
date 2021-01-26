@@ -4,10 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node ./src/index.ts",
+    "dev": "cross-env LOG_LEVEL=trace ts-node ./src/index.ts",
     "build": "tsc",
     "proto": "./proto-gen.sh",
-    "test": "jest --runInBand --coverage",
+    "test": "cross-env LOG_LEVEL=off jest --runInBand --coverage",
     "client": "grpcc --proto ./protos/CourseService.proto --address localhost:50051 -i",
     "lint": "eslint src/**/*.ts"
   },
@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.2.2",
+    "cross-env": "^7.0.3",
     "google-protobuf": "^3.14.0",
     "log4js": "^6.3.0",
     "pg": "^8.5.1",

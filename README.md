@@ -15,6 +15,7 @@ kdbから講義情報の取得と管理を行います。
 | PG_DATABASE | Postgres接続先のデータベース名   | twinte_course_service |
 | PG_USER     | Postgres接続に使用するユーザー名 | postgres              |
 | PG_PASSWORD | Postgres接続に使用するパスワード | postgres              |
+| LOG_LEVEL   | ログレベル fatal / error / warn / info / debug / trace / off | info              |
 
 # 開発方法
 Docker + VSCodeを推奨します。
