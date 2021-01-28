@@ -8,6 +8,8 @@ import { ICourseServiceServer } from '../generated/protos/CourseService_grpc_pb'
 import {
   Course,
   CourseSchedule,
+  GetCoursesByCodeRequest,
+  GetCoursesByCodeResponse,
   GetCoursesRequest,
   GetCoursesResponse,
   ListAllCoursesRequest,
@@ -19,6 +21,7 @@ import {
 import { fetchCoursesFromKdbUseCase } from './usecase/fetchCoursesFromKdb'
 import { getCoursesUseCase } from './usecase/getCourses'
 import { updateCourseDatabaseUseCase } from './usecase/updateCourseDatabase'
+import { getCoursesByCodeUseCase } from './usecase/getCoursesByCode'
 import { Course as dbCourse } from './model/course'
 import { listAllCoursesUseCase } from './usecase/listAllCourses'
 import { Status } from '@grpc/grpc-js/build/src/constants'
@@ -113,6 +116,53 @@ export const courseService: ICourseServiceServer = applyLogger({
     try {
       const courses = await listAllCoursesUseCase()
       const res = new ListAllCoursesResponse()
+      res.setCoursesList(courses.map(createGrpcCourse))
+      callback(null, res)
+    } catch (e) {
+      callback(e)
+    }
+  },
+
+  async getCoursesByCode(
+    call: ServerUnaryCall<GetCoursesByCodeRequest, GetCoursesByCodeResponse>,
+    callback: sendUnaryData<GetCoursesByCodeResponse>
+  ) {
+    try {
+      const conditions = call.request.getConditionsList()
+      if (
+        conditions.length !==
+        [...new Set(conditions.map((cc) => `${cc.getYear()}${cc.getCode()}`))]
+          .length
+      ) {
+        callback({
+          code: Status.INVALID_ARGUMENT,
+          details: `指定された引数に重複したidが含まれています。`,
+        })
+        return
+      }
+
+      const courses = await getCoursesByCodeUseCase(
+        conditions.map((cc) => ({ year: cc.getYear(), code: cc.getCode() }))
+      )
+
+      if (courses.length !== conditions.length) {
+        const metadata = new Metadata()
+        const missing = conditions.filter(
+          (i) =>
+            !courses.find(
+              (c) => c.year === i.getYear() && c.code === i.getCode()
+            )
+        )
+        metadata.set('conditions', missing.join(','))
+        callback({
+          code: Status.NOT_FOUND,
+          details: `指定された条件の講義が見つかりませんでした。詳細はmetadataを参照してください。`,
+          metadata,
+        })
+        return
+      }
+
+      const res = new GetCoursesByCodeResponse()
       res.setCoursesList(courses.map(createGrpcCourse))
       callback(null, res)
     } catch (e) {

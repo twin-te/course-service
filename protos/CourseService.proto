@@ -5,6 +5,8 @@ service CourseService {
   rpc UpdateCourseDatabase(UpdateCourseDatabaseRequest) returns (UpdateCourseDatabaseResponse);
   /* 指定されたidの講義情報を取得する */
   rpc GetCourses(GetCoursesRequest) returns (GetCoursesResponse);
+  /* 指定されたcodeの講義情報を取得する */
+  rpc GetCoursesByCode(GetCoursesByCodeRequest) returns (GetCoursesByCodeResponse);
   /* データベースが持つ全てのコースを取得する */
   rpc ListAllCourses(ListAllCoursesRequest) returns (ListAllCoursesResponse);
 }
@@ -85,6 +87,19 @@ message GetCoursesRequest {
 }
 
 message GetCoursesResponse {
+  repeated Course courses = 1;
+}
+
+message GetCoursesByCodeRequestCondition {
+  int32 year = 1;
+  string code = 2;
+}
+
+message GetCoursesByCodeRequest {
+  repeated GetCoursesByCodeRequestCondition conditions = 1;
+}
+
+message GetCoursesByCodeResponse {
   repeated Course courses = 1;
 }
 

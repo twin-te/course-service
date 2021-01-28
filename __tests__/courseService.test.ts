@@ -4,6 +4,9 @@ import {
   UpdateCourseDatabaseRequest,
   GetCoursesRequest,
   ListAllCoursesRequest,
+  GetCoursesByCodeRequest,
+  GetCoursesByCodeRequestCondition,
+  GetCoursesResponse,
 } from '../generated/protos/CourseService_pb'
 import { startServer, stopServer } from '../src/grpc'
 import { mocked } from 'ts-jest/utils'
@@ -16,10 +19,12 @@ import { createDBCourse } from '../src/utils/converter'
 import { listAllCoursesUseCase } from '../src/usecase/listAllCourses'
 import { Status } from '@grpc/grpc-js/build/src/constants'
 import { NoCoursesFoundError } from 'twinte-parser'
+import { getCoursesByCodeUseCase } from '../src/usecase/getCoursesByCode'
 
 jest.mock('../src/usecase/fetchCoursesFromKdb')
 jest.mock('../src/usecase/updateCourseDatabase')
 jest.mock('../src/usecase/getCourses')
+jest.mock('../src/usecase/getCoursesByCode')
 jest.mock('../src/usecase/listAllCourses')
 
 const testData = loadTestData()
@@ -155,6 +160,111 @@ test('getCourses:duplicated ids', async (done) => {
   const req = new GetCoursesRequest()
   req.setIdsList([testid, testid])
   client.getCourses(req, (err, _) => {
+    expect(err).toBeTruthy()
+    if (!err) throw new Error()
+    expect(err.code).toBe(Status.INVALID_ARGUMENT)
+    done()
+  })
+})
+
+test('getCoursesByCode', async (done) => {
+  const conditions = [
+    { year: 2020, code: testData[0].code },
+    { year: 2020, code: testData[1].code },
+  ]
+  mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [
+    createDBCourse(testData[0], 2020, v4()),
+    createDBCourse(testData[1], 2020, v4()),
+  ])
+  const req = new GetCoursesByCodeRequest()
+  req.setConditionsList(
+    conditions.map((c) => {
+      const r = new GetCoursesByCodeRequestCondition()
+      r.setYear(c.year)
+      r.setCode(c.code)
+      return r
+    })
+  )
+  client.getCoursesByCode(req, (err, res) => {
+    expect(err).toBeNull()
+    expect(res).toBeTruthy()
+    if (!res) throw new Error()
+    res.getCoursesList().forEach((c, i) => {
+      expect(c.getYear()).toBe(conditions[i].year)
+      expect(c.getCode()).toBe(conditions[i].code)
+    })
+    done()
+  })
+})
+
+test('getCoursesByCode:notfound', async (done) => {
+  const conditions = [
+    { year: 2020, code: testData[0].code },
+    { year: 2020, code: testData[1].code },
+  ]
+  mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [])
+  const req = new GetCoursesByCodeRequest()
+  req.setConditionsList(
+    conditions.map((c) => {
+      const r = new GetCoursesByCodeRequestCondition()
+      r.setYear(c.year)
+      r.setCode(c.code)
+      return r
+    })
+  )
+  client.getCoursesByCode(req, (err, _) => {
+    expect(err).toBeTruthy()
+    if (!err) throw new Error()
+    expect(err.code).toBe(Status.NOT_FOUND)
+    expect(typeof err.metadata.get('conditions')[0]).toBe('string')
+    // expect((err.metadata.get('conditions')[0] as string).split(',')).toEqual(testids)
+    done()
+  })
+})
+
+test('getCoursesByCode:notfound2', async (done) => {
+  const conditions = [
+    { year: 2020, code: testData[0].code },
+    { year: 2020, code: testData[1].code },
+  ]
+  mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [
+    createDBCourse(testData[0], 2020, v4()),
+  ])
+  const req = new GetCoursesByCodeRequest()
+  req.setConditionsList(
+    conditions.map((c) => {
+      const r = new GetCoursesByCodeRequestCondition()
+      r.setYear(c.year)
+      r.setCode(c.code)
+      return r
+    })
+  )
+  client.getCoursesByCode(req, (err, _) => {
+    expect(err).toBeTruthy()
+    if (!err) throw new Error()
+    expect(err.code).toBe(Status.NOT_FOUND)
+    expect(typeof err.metadata.get('conditions')[0]).toBe('string')
+    // expect(err.metadata.get('conditions')[0]).toEqual(testids[1])
+    done()
+  })
+})
+
+test('getCoursesByCode:duplicated conditions', async (done) => {
+  const conditions = [
+    { year: 2020, code: testData[0].code },
+    { year: 2020, code: testData[0].code },
+  ]
+  mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [])
+  const req = new GetCoursesByCodeRequest()
+  req.setConditionsList(
+    conditions.map((c) => {
+      const r = new GetCoursesByCodeRequestCondition()
+      r.setYear(c.year)
+      r.setCode(c.code)
+      return r
+    })
+  )
+  client.getCoursesByCode(req, (err, _) => {
     expect(err).toBeTruthy()
     if (!err) throw new Error()
     expect(err.code).toBe(Status.INVALID_ARGUMENT)
