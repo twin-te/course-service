@@ -2,6 +2,7 @@ FROM node:14-slim AS build-env
 WORKDIR /usr/src/app
 COPY package.json ./
 COPY yarn.lock ./
+COPY .yarnrc ./
 RUN yarn
 
 COPY . .
@@ -20,6 +21,7 @@ COPY --from=build-env /usr/src/app/dist ./dist
 COPY --from=build-env /usr/src/app/generated ./generated
 COPY --from=build-env /usr/src/app/package.json .
 COPY --from=build-env /usr/src/app/yarn.lock .
+COPY --from=build-env /usr/src/app/.yarnrc .
 
 RUN yarn install --prod
 
