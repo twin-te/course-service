@@ -76,7 +76,7 @@ message Course {
   string overview = 7;
   string remarks = 8;
   string lastUpdate = 9;
-  repeated int32 recomendedGrades = 10;
+  repeated int32 recommendedGrades = 10;
   repeated CourseMethod methods = 11;
   repeated CourseSchedule schedules = 12;
   bool hasParseError = 13; // パースエラーが発生した場合（情報の信憑性が薄い場合）trueになる

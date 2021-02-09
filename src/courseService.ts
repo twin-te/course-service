@@ -186,7 +186,7 @@ function createGrpcCourse(c: dbCourse): Course {
   d.setOverview(c.overview)
   d.setRemarks(c.remarks)
   d.setLastupdate(c.lastUpdate.toISOString())
-  d.setRecomendedgradesList(c.recommendedGrades.map((r) => r.grade))
+  d.setRecommendedgradesList(c.recommendedGrades.map((r) => r.grade))
   d.setMethodsList(c.methods.map((m) => m.method))
   d.setSchedulesList(
     c.schedules.map((s) => {
