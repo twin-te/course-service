@@ -1,9 +1,9 @@
 import { Course as ParsedCourse } from 'twinte-parser'
 import { getConnection } from 'typeorm'
-import { Course } from '../model/course'
+import { Course } from '../database/model/course'
 
 import { v4 } from 'uuid'
-import { createDBCourse } from '../utils/converter'
+import { createDBCourse } from '../grpc/converter'
 
 type ReportCourseData = {
   id: string

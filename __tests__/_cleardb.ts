@@ -1,8 +1,8 @@
 import { getConnection } from 'typeorm'
-import { Course } from '../src/model/course'
-import { CourseRecommendedGrade } from '../src/model/courseRecommendedGrade'
-import { CourseSchedule } from '../src/model/courseSchedule'
-import { CourseMethod } from '../src/model/courseMethod'
+import { Course } from '../src/database/model/course'
+import { CourseRecommendedGrade } from '../src/database/model/courseRecommendedGrade'
+import { CourseSchedule } from '../src/database/model/courseSchedule'
+import { CourseMethod } from '../src/database/model/courseMethod'
 
 export async function clearDB() {
   await getConnection().getRepository(CourseMethod).delete({})

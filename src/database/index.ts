@@ -4,7 +4,7 @@ import { Course } from './model/course'
 import { CourseMethod } from './model/courseMethod'
 import { CourseRecommendedGrade } from './model/courseRecommendedGrade'
 import { CourseSchedule } from './model/courseSchedule'
-import { logger } from './logger'
+import { logger } from '../logger'
 
 /**
  * postgresへ接続

@@ -1,11 +1,11 @@
 import { getConnection, Repository } from 'typeorm'
-import { connectDatabase, disconnectDatabase } from '../../src/db'
-import { Course } from '../../src/model/course'
+import { connectDatabase, disconnectDatabase } from '../../src/database'
+import { Course } from '../../src/database/model/course'
 import { Module as PModule, Day as PDay } from 'twinte-parser'
 import { updateCourseDatabaseUseCase } from '../../src/usecase/updateCourseDatabase'
 import { loadTestData } from '../_loadTestData'
 import { clearDB } from '../_cleardb'
-import { createDBCourse } from '../../src/utils/converter'
+import { createDBCourse } from '../../src/grpc/converter'
 import { compareCourseWithoutId } from '../_comparator'
 
 const initialData = loadTestData()

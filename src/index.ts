@@ -1,4 +1,4 @@
-import { connectDatabase } from './db'
+import { connectDatabase } from './database'
 import { startServer } from './grpc'
 import { logger } from './logger'
 

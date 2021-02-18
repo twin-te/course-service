@@ -1,7 +1,7 @@
 import { ServerCredentials, Server } from '@grpc/grpc-js'
-import { CourseServiceService } from '../generated/protos/CourseService_grpc_pb'
+import { CourseServiceService } from '../../generated/protos/CourseService_grpc_pb'
 import { courseService } from './courseService'
-import { logger } from './logger'
+import { logger } from '../logger'
 
 let server: Server
 

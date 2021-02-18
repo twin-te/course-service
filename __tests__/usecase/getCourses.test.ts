@@ -1,10 +1,10 @@
 import { getConnection } from 'typeorm'
-import { connectDatabase, disconnectDatabase } from '../../src/db'
-import { Course } from '../../src/model/course'
+import { connectDatabase, disconnectDatabase } from '../../src/database/'
+import { Course } from '../../src/database/model/course'
 
 import { getCoursesUseCase } from '../../src/usecase/getCourses'
 import { v4 } from 'uuid'
-import { createDBCourse } from '../../src/utils/converter'
+import { createDBCourse } from '../../src/grpc/converter'
 import { loadTestData } from '../_loadTestData'
 import { compareCourseWithoutId } from '../_comparator'
 import { clearDB } from '../_cleardb'

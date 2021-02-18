@@ -4,7 +4,7 @@ import {
   ServerUnaryCall,
   UntypedServiceImplementation,
 } from '@grpc/grpc-js'
-import { ICourseServiceServer } from '../generated/protos/CourseService_grpc_pb'
+import { ICourseServiceServer } from '../../generated/protos/CourseService_grpc_pb'
 import {
   Course,
   CourseSchedule,
@@ -17,15 +17,15 @@ import {
   ReportCourseData,
   UpdateCourseDatabaseRequest,
   UpdateCourseDatabaseResponse,
-} from '../generated/protos/CourseService_pb'
-import { fetchCoursesFromKdbUseCase } from './usecase/fetchCoursesFromKdb'
-import { getCoursesUseCase } from './usecase/getCourses'
-import { updateCourseDatabaseUseCase } from './usecase/updateCourseDatabase'
-import { getCoursesByCodeUseCase } from './usecase/getCoursesByCode'
-import { Course as dbCourse } from './model/course'
-import { listAllCoursesUseCase } from './usecase/listAllCourses'
+} from '../../generated/protos/CourseService_pb'
+import { fetchCoursesFromKdbUseCase } from '../usecase/fetchCoursesFromKdb'
+import { getCoursesUseCase } from '../usecase/getCourses'
+import { updateCourseDatabaseUseCase } from '../usecase/updateCourseDatabase'
+import { getCoursesByCodeUseCase } from '../usecase/getCoursesByCode'
+import { Course as dbCourse } from '../database/model/course'
+import { listAllCoursesUseCase } from '../usecase/listAllCourses'
 import { Status } from '@grpc/grpc-js/build/src/constants'
-import { grpcLogger as logger } from './logger'
+import { grpcLogger as logger } from '../logger'
 import {
   ServerErrorResponse,
   ServerStatusResponse,

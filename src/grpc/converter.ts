@@ -3,11 +3,15 @@ import {
   Day as PDay,
   Course as PCourse,
 } from 'twinte-parser'
-import { Course } from '../model/course'
-import { CourseMethod } from '../model/courseMethod'
-import { CourseRecommendedGrade } from '../model/courseRecommendedGrade'
-import { CourseSchedule } from '../model/courseSchedule'
-import { Module, Day, CourseMethod as CourseMethodEnum } from '../model/enums'
+import { Course } from '../database/model/course'
+import { CourseMethod } from '../database/model/courseMethod'
+import { CourseRecommendedGrade } from '../database/model/courseRecommendedGrade'
+import { CourseSchedule } from '../database/model/courseSchedule'
+import {
+  Module,
+  Day,
+  CourseMethod as CourseMethodEnum,
+} from '../database/model/enums'
 
 /**
  * パーサのModule enumをデータベースのenumへ変換

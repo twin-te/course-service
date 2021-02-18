@@ -1,6 +1,6 @@
-import { createDBDay, createDBModule } from '../../src/utils/converter'
+import { createDBDay, createDBModule } from '../../src/grpc/converter'
 import { Module as PModule, Day as PDay } from 'twinte-parser'
-import { Module, Day } from '../../src/model/enums'
+import { Module, Day } from '../../src/database/model/enums'
 
 describe('ModuleConverter', () => {
   test('SpringA', () => {

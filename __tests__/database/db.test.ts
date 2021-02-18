@@ -1,5 +1,5 @@
 import { getConnection } from 'typeorm'
-import { connectDatabase, disconnectDatabase } from '../src/db'
+import { connectDatabase, disconnectDatabase } from '../../src/database'
 
 test('データベースへ接続', async () => {
   await connectDatabase()

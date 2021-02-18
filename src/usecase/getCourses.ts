@@ -1,5 +1,5 @@
 import { getConnection } from 'typeorm'
-import { Course } from '../model/course'
+import { Course } from '../database/model/course'
 
 /**
  * 指定されたIDの授業を取得する

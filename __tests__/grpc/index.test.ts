@@ -1,7 +1,7 @@
 import { credentials } from '@grpc/grpc-js'
 import { ConnectivityState } from '@grpc/grpc-js/build/src/channel'
-import { CourseServiceClient } from '../generated/protos/CourseService_grpc_pb'
-import { startServer, stopServer } from '../src/grpc'
+import { CourseServiceClient } from '../../generated/protos/CourseService_grpc_pb'
+import { startServer, stopServer } from '../../src/grpc'
 
 test('grpcサーバーが立ち上がるか', async (done) => {
   await startServer()

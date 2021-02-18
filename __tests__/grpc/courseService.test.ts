@@ -1,4 +1,4 @@
-import { CourseServiceClient } from '../generated/protos/CourseService_grpc_pb'
+import { CourseServiceClient } from '../../generated/protos/CourseService_grpc_pb'
 import { credentials } from '@grpc/grpc-js'
 import {
   UpdateCourseDatabaseRequest,
@@ -7,25 +7,25 @@ import {
   GetCoursesByCodeRequest,
   GetCoursesByCodeRequestCondition,
   GetCoursesResponse,
-} from '../generated/protos/CourseService_pb'
-import { startServer, stopServer } from '../src/grpc'
+} from '../../generated/protos/CourseService_pb'
+import { startServer, stopServer } from '../../src/grpc'
 import { mocked } from 'ts-jest/utils'
-import { fetchCoursesFromKdbUseCase } from '../src/usecase/fetchCoursesFromKdb'
-import { updateCourseDatabaseUseCase } from '../src/usecase/updateCourseDatabase'
+import { fetchCoursesFromKdbUseCase } from '../../src/usecase/fetchCoursesFromKdb'
+import { updateCourseDatabaseUseCase } from '../../src/usecase/updateCourseDatabase'
 import { v4 } from 'uuid'
-import { loadTestData } from './_loadTestData'
-import { getCoursesUseCase } from '../src/usecase/getCourses'
-import { createDBCourse } from '../src/utils/converter'
-import { listAllCoursesUseCase } from '../src/usecase/listAllCourses'
+import { loadTestData } from '../_loadTestData'
+import { getCoursesUseCase } from '../../src/usecase/getCourses'
+import { createDBCourse } from '../../src/grpc/converter'
+import { listAllCoursesUseCase } from '../../src/usecase/listAllCourses'
 import { Status } from '@grpc/grpc-js/build/src/constants'
 import { NoCoursesFoundError } from 'twinte-parser'
-import { getCoursesByCodeUseCase } from '../src/usecase/getCoursesByCode'
+import { getCoursesByCodeUseCase } from '../../src/usecase/getCoursesByCode'
 
-jest.mock('../src/usecase/fetchCoursesFromKdb')
-jest.mock('../src/usecase/updateCourseDatabase')
-jest.mock('../src/usecase/getCourses')
-jest.mock('../src/usecase/getCoursesByCode')
-jest.mock('../src/usecase/listAllCourses')
+jest.mock('../../src/usecase/fetchCoursesFromKdb')
+jest.mock('../../src/usecase/updateCourseDatabase')
+jest.mock('../../src/usecase/getCourses')
+jest.mock('../../src/usecase/getCoursesByCode')
+jest.mock('../../src/usecase/listAllCourses')
 
 const testData = loadTestData()
 

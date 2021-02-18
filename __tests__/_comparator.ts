@@ -1,4 +1,4 @@
-import { Course } from '../src/model/course'
+import { Course } from '../src/database/model/course'
 
 export function compareCourseWithoutId(
   a: Course,
