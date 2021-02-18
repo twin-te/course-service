@@ -14,13 +14,15 @@ export class CourseSchedule {
 
   @Column({
     name: 'module',
-    type: 'smallint',
+    type: 'enum',
+    enum: Module,
   })
   module!: Module
 
   @Column({
     name: 'day',
-    type: 'smallint',
+    type: 'enum',
+    enum: Day,
   })
   day!: Day
 
