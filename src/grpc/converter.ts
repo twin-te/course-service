@@ -18,9 +18,10 @@ import {
  * @param m パーサのModule
  */
 export function createDBModule(m: PModule): Module {
-  return Module[
-    Module[Object.values(PModule).indexOf(m)] as keyof typeof Module
-  ]
+  return (
+    Module[Module[Object.values(PModule).indexOf(m)] as keyof typeof Module] ??
+    Module.Unknown
+  )
 }
 
 /**
@@ -28,7 +29,9 @@ export function createDBModule(m: PModule): Module {
  * @param d パーサのDay
  */
 export function createDBDay(d: PDay): Day {
-  return Day[Day[Object.values(PDay).indexOf(d)] as keyof typeof Day]
+  return (
+    Day[Day[Object.values(PDay).indexOf(d)] as keyof typeof Day] ?? Day.Unknown
+  )
 }
 
 /**
