@@ -18,28 +18,9 @@ import {
  * @param m パーサのModule
  */
 export function createDBModule(m: PModule): Module {
-  switch (m) {
-    case PModule.SpringA:
-      return Module.SpringA
-    case PModule.SpringB:
-      return Module.SpringB
-    case PModule.SpringC:
-      return Module.SpringC
-    case PModule.FallA:
-      return Module.FallA
-    case PModule.FallB:
-      return Module.FallB
-    case PModule.FallC:
-      return Module.FallC
-    case PModule.SummerVacation:
-      return Module.SummerVacation
-    case PModule.SpringVacation:
-      return Module.SpringVacation
-    case PModule.Annual:
-      return Module.Annual
-    default:
-      return Module.Unknown
-  }
+  return Module[
+    Module[Object.values(PModule).indexOf(m)] as keyof typeof Module
+  ]
 }
 
 /**
@@ -47,30 +28,7 @@ export function createDBModule(m: PModule): Module {
  * @param d パーサのDay
  */
 export function createDBDay(d: PDay): Day {
-  switch (d) {
-    case PDay.Sun:
-      return Day.Sun
-    case PDay.Mon:
-      return Day.Mon
-    case PDay.Tue:
-      return Day.Tue
-    case PDay.Wed:
-      return Day.Wed
-    case PDay.Thu:
-      return Day.Thu
-    case PDay.Fri:
-      return Day.Fri
-    case PDay.Sat:
-      return Day.Sat
-    case PDay.Intensive:
-      return Day.Intensive
-    case PDay.Appointment:
-      return Day.Appointment
-    case PDay.AnyTime:
-      return Day.AnyTime
-    default:
-      return Day.Unknown
-  }
+  return Day[Day[Object.values(PDay).indexOf(d)] as keyof typeof Day]
 }
 
 /**
