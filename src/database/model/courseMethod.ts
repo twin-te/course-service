@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 import { Course } from './course'
 import { CourseMethod as CourseMethodEnum } from './enums'
 
@@ -10,6 +16,7 @@ export class CourseMethod {
   id!: number
 
   @ManyToOne(() => Course, (r) => r.methods)
+  @JoinColumn({ name: 'course_id' })
   courseId!: string
 
   @Column({

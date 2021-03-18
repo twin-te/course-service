@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 import { Course } from './course'
 
 @Entity({
@@ -9,6 +15,7 @@ export class CourseRecommendedGrade {
   id!: number
 
   @ManyToOne(() => Course, (r) => r.recommendedGrades)
+  @JoinColumn({ name: 'course_id' })
   courseId!: string
 
   @Column({
