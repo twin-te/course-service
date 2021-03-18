@@ -1,4 +1,4 @@
 .devcontainer
 node_modules
 dist
-generated/protos
+generated

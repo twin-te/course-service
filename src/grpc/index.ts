@@ -1,23 +1,35 @@
-import { ServerCredentials, Server } from '@grpc/grpc-js'
-import { CourseServiceService } from '../../generated/protos/CourseService_grpc_pb'
-import { courseService } from './courseService'
+import * as grpc from '@grpc/grpc-js'
+import * as protoLoader from '@grpc/proto-loader'
+import { courseService } from './course.service'
 import { logger } from '../logger'
+import { CourseService } from '../../generated'
+import { ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client'
+import path from 'path'
 
-let server: Server
+const protoPath = path.resolve(__dirname, `../../protos/CourseService.proto`)
+const serviceName = 'CourseService'
+
+let server: grpc.Server | undefined
+
+const def = protoLoader.loadSync(protoPath, { defaults: true })
+const courseServiceDef = (grpc.loadPackageDefinition(def)[
+  serviceName
+] as ServiceClientConstructor).service
 
 /**
  * grpcサーバー起動
  */
 export function startServer() {
   return new Promise<void>((resolve, reject) => {
-    server = new Server()
-    server.addService(CourseServiceService, courseService)
-    server.bindAsync(
+    if (server) reject(new Error('already started'))
+    server = new grpc.Server()
+    server!.addService(courseServiceDef, courseService)
+    server!.bindAsync(
       '0.0.0.0:50051',
-      ServerCredentials.createInsecure(),
+      grpc.ServerCredentials.createInsecure(),
       () => {
         try {
-          server.start()
+          server!.start()
           logger.info('grpc server started.')
           resolve()
         } catch (e) {
@@ -33,5 +45,11 @@ export function startServer() {
  * grpcサーバー停止
  */
 export function stopServer() {
-  server.forceShutdown()
+  return new Promise<void>((resolve, reject) => {
+    if (!server) throw new Error('not started')
+    server.tryShutdown((err) => {
+      if (err) reject(err)
+      else resolve()
+    })
+  })
 }

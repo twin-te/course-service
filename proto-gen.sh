@@ -1,16 +1,19 @@
-#!/usr/bin/env bash
+mkdir -p generated
 
-rm -rf ./generated/protos
+yarn pbjs \
+  --target static-module \
+  --no-encode \
+  --no-decode \
+  --path ../../ \
+  --out ./generated/index.js \
+  ./protos/CourseService.proto \
 
-# Path to this plugin
-PROTOC_GEN_TS_PATH="./node_modules/.bin/protoc-gen-ts"
+yarn pbts \
+  --out ./generated/index.d.ts \
+  ./generated/index.js \
 
-# Directory to write generated code to (.js and .d.ts files)
-OUT_DIR="./generated"
-
-yarn grpc_tools_node_protoc \
-    --plugin="protoc-gen-ts=${PROTOC_GEN_TS_PATH}" \
-    --js_out="import_style=commonjs,binary:${OUT_DIR}" \
-    --grpc_out="grpc_js:${OUT_DIR}" \
-    --ts_out="service=grpc-node,mode=grpc-js:${OUT_DIR}" \
-    protos/CourseService.proto
+### https://github.com/protobufjs/protobuf.js/issues/1222
+sed -i -e "s/\[ 'Promise' \]\./Promise/g" "generated/index.d.ts"
+sed -i -e "s/\[ 'object' \]\.<string, any>/{ [k: string]: any }/g" "generated/index.d.ts"
+sed -i -e "s/\[ 'Array' \]\./Array/g" "generated/index.d.ts"
+###

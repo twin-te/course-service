@@ -4,20 +4,6 @@ import {
   ServerUnaryCall,
   UntypedServiceImplementation,
 } from '@grpc/grpc-js'
-import { ICourseServiceServer } from '../../generated/protos/CourseService_grpc_pb'
-import {
-  Course,
-  CourseSchedule,
-  GetCoursesByCodeRequest,
-  GetCoursesByCodeResponse,
-  GetCoursesRequest,
-  GetCoursesResponse,
-  ListAllCoursesRequest,
-  ListAllCoursesResponse,
-  ReportCourseData,
-  UpdateCourseDatabaseRequest,
-  UpdateCourseDatabaseResponse,
-} from '../../generated/protos/CourseService_pb'
 import { fetchCoursesFromKdbUseCase } from '../usecase/fetchCoursesFromKdb'
 import { getCoursesUseCase } from '../usecase/getCourses'
 import { updateCourseDatabaseUseCase } from '../usecase/updateCourseDatabase'
@@ -30,57 +16,42 @@ import {
   ServerErrorResponse,
   ServerStatusResponse,
 } from '@grpc/grpc-js/build/src/server-call'
+import { GrpcServer } from './type'
+import {
+  CourseService,
+  GetCoursesByCodeResponse,
+  GetCoursesResponse,
+  ICourse,
+  ICourseSchedule,
+  ListAllCoursesResponse,
+  UpdateCourseDatabaseResponse,
+} from '../../generated'
 
 /**
  * grpcサーバのCourseService実装
  */
-export const courseService: ICourseServiceServer = applyLogger({
-  async updateCourseDatabase(
-    call: ServerUnaryCall<
-      UpdateCourseDatabaseRequest,
-      UpdateCourseDatabaseResponse
-    >,
-    callback: sendUnaryData<UpdateCourseDatabaseResponse>
-  ) {
+export const courseService: GrpcServer<CourseService> = applyLogger({
+  async updateCourseDatabase({ request }, callback) {
     try {
-      const res = new UpdateCourseDatabaseResponse()
-      const courses = await fetchCoursesFromKdbUseCase(call.request.getYear())
+      const courses = await fetchCoursesFromKdbUseCase(request.year)
       const updateResult = await updateCourseDatabaseUseCase(
-        call.request.getYear(),
+        request.year,
         courses
       )
-      res.setInsertedcoursesList(
-        updateResult.insertedCourses.map((c) => {
-          const d = new ReportCourseData()
-          d.setId(c.id)
-          d.setName(c.name)
-          d.setCode(c.code)
-          return d
+      callback(
+        null,
+        UpdateCourseDatabaseResponse.create({
+          ...updateResult,
         })
       )
-      res.setUpdatedcoursesList(
-        updateResult.updatedCourses.map((c) => {
-          const d = new ReportCourseData()
-          d.setId(c.id)
-          d.setName(c.name)
-          d.setCode(c.code)
-          return d
-        })
-      )
-
-      callback(null, res)
     } catch (e) {
       callback(e)
     }
   },
 
-  async getCourses(
-    call: ServerUnaryCall<GetCoursesRequest, GetCoursesResponse>,
-    callback: sendUnaryData<GetCoursesResponse>
-  ) {
+  async getCourses({ request }, callback) {
     try {
-      const res = new GetCoursesResponse()
-      const ids = call.request.getIdsList()
+      const ids = request.ids
 
       if (ids.length !== [...new Set(ids)].length) {
         callback({
@@ -91,7 +62,7 @@ export const courseService: ICourseServiceServer = applyLogger({
       }
 
       const courses = await getCoursesUseCase(ids)
-      if (courses.length !== call.request.getIdsList().length) {
+      if (courses.length !== request.ids.length) {
         const metadata = new Metadata()
         const missing = ids.filter((i) => !courses.find((c) => c.id === i))
         metadata.set('ids', missing.join(','))
@@ -102,37 +73,37 @@ export const courseService: ICourseServiceServer = applyLogger({
         })
         return
       }
-      res.setCoursesList(courses.map(createGrpcCourse))
-      callback(null, res)
+      callback(
+        null,
+        GetCoursesResponse.create({
+          courses: courses.map(createGrpcCourse),
+        })
+      )
     } catch (e) {
       callback(e)
     }
   },
 
-  async listAllCourses(
-    call: ServerUnaryCall<ListAllCoursesRequest, ListAllCoursesResponse>,
-    callback: sendUnaryData<ListAllCoursesResponse>
-  ) {
+  async listAllCourses(call, callback) {
     try {
       const courses = await listAllCoursesUseCase()
-      const res = new ListAllCoursesResponse()
-      res.setCoursesList(courses.map(createGrpcCourse))
-      callback(null, res)
+      callback(
+        null,
+        ListAllCoursesResponse.create({
+          courses: courses.map(createGrpcCourse),
+        })
+      )
     } catch (e) {
       callback(e)
     }
   },
 
-  async getCoursesByCode(
-    call: ServerUnaryCall<GetCoursesByCodeRequest, GetCoursesByCodeResponse>,
-    callback: sendUnaryData<GetCoursesByCodeResponse>
-  ) {
+  async getCoursesByCode({ request }, callback) {
     try {
-      const conditions = call.request.getConditionsList()
+      const conditions = request.conditions
       if (
         conditions.length !==
-        [...new Set(conditions.map((cc) => `${cc.getYear()}${cc.getCode()}`))]
-          .length
+        [...new Set(conditions.map((cc) => `${cc.year}${cc.code}`))].length
       ) {
         callback({
           code: Status.INVALID_ARGUMENT,
@@ -142,16 +113,13 @@ export const courseService: ICourseServiceServer = applyLogger({
       }
 
       const courses = await getCoursesByCodeUseCase(
-        conditions.map((cc) => ({ year: cc.getYear(), code: cc.getCode() }))
+        conditions.map((cc) => ({ year: cc.year, code: cc.code }))
       )
 
       if (courses.length !== conditions.length) {
         const metadata = new Metadata()
         const missing = conditions.filter(
-          (i) =>
-            !courses.find(
-              (c) => c.year === i.getYear() && c.code === i.getCode()
-            )
+          (i) => !courses.find((c) => c.year === i.year && c.code === i.code)
         )
         metadata.set('conditions', missing.join(','))
         callback({
@@ -161,10 +129,12 @@ export const courseService: ICourseServiceServer = applyLogger({
         })
         return
       }
-
-      const res = new GetCoursesByCodeResponse()
-      res.setCoursesList(courses.map(createGrpcCourse))
-      callback(null, res)
+      callback(
+        null,
+        GetCoursesByCodeResponse.create({
+          courses: courses.map(createGrpcCourse),
+        })
+      )
     } catch (e) {
       callback(e)
     }
@@ -175,31 +145,20 @@ export const courseService: ICourseServiceServer = applyLogger({
  * grpcの構造体へ変換
  * @param c データベースのCourseModel
  */
-function createGrpcCourse(c: dbCourse): Course {
-  const d = new Course()
-  d.setId(c.id)
-  d.setCode(c.code)
-  d.setYear(c.year)
-  d.setName(c.name)
-  d.setInstructor(c.instructor)
-  d.setCredit(c.credit)
-  d.setOverview(c.overview)
-  d.setRemarks(c.remarks)
-  d.setLastupdate(c.lastUpdate.toISOString())
-  d.setRecommendedgradesList(c.recommendedGrades.map((r) => r.grade))
-  d.setMethodsList(c.methods.map((m) => m.method))
-  d.setSchedulesList(
-    c.schedules.map((s) => {
-      const ss = new CourseSchedule()
-      ss.setModule(s.module)
-      ss.setDay(s.day)
-      ss.setPeriod(s.period)
-      ss.setRoom(s.room)
-      return ss
-    })
-  )
-  d.setHasparseerror(c.hasParseError)
-  return d
+function createGrpcCourse({
+  lastUpdate,
+  recommendedGrades,
+  methods,
+  schedules,
+  ...c
+}: dbCourse): ICourse {
+  return {
+    lastUpdate: lastUpdate.toISOString(),
+    recommendedGrades: recommendedGrades.map((r) => r.grade),
+    methods: methods.map((m) => m.method),
+    schedules: (schedules as unknown) as ICourseSchedule[],
+    ...c,
+  }
 }
 
 function applyLogger<T extends UntypedServiceImplementation>(i: T): T {

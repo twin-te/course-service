@@ -1,13 +1,4 @@
-import { CourseServiceClient } from '../../generated/protos/CourseService_grpc_pb'
-import { credentials } from '@grpc/grpc-js'
-import {
-  UpdateCourseDatabaseRequest,
-  GetCoursesRequest,
-  ListAllCoursesRequest,
-  GetCoursesByCodeRequest,
-  GetCoursesByCodeRequestCondition,
-  GetCoursesResponse,
-} from '../../generated/protos/CourseService_pb'
+import * as grpc from '@grpc/grpc-js'
 import { startServer, stopServer } from '../../src/grpc'
 import { mocked } from 'ts-jest/utils'
 import { fetchCoursesFromKdbUseCase } from '../../src/usecase/fetchCoursesFromKdb'
@@ -20,6 +11,19 @@ import { listAllCoursesUseCase } from '../../src/usecase/listAllCourses'
 import { Status } from '@grpc/grpc-js/build/src/constants'
 import { NoCoursesFoundError } from 'twinte-parser'
 import { getCoursesByCodeUseCase } from '../../src/usecase/getCoursesByCode'
+import * as protoLoader from '@grpc/proto-loader'
+import path from 'path'
+import { ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client'
+import {
+  UpdateCourseDatabaseRequest,
+  GetCoursesRequest,
+  GetCoursesByCodeRequest,
+  GetCoursesByCodeRequestCondition,
+  ListAllCoursesRequest,
+  CourseService,
+} from '../../generated'
+import { GrpcClient } from '../../src/grpc/type'
+import { CourseSchedule } from '../../src/database/model/courseSchedule'
 
 jest.mock('../../src/usecase/fetchCoursesFromKdb')
 jest.mock('../../src/usecase/updateCourseDatabase')
@@ -29,14 +33,20 @@ jest.mock('../../src/usecase/listAllCourses')
 
 const testData = loadTestData()
 
-let client: CourseServiceClient
+const def = protoLoader.loadSync(
+  path.resolve(__dirname, `../../protos/CourseService.proto`)
+)
+const pkg = grpc.loadPackageDefinition(def)
+const ClientConstructor = pkg.CourseService as ServiceClientConstructor
+
+let client: GrpcClient<CourseService>
 
 beforeAll(async () => {
   await startServer()
-  client = new CourseServiceClient(
+  client = (new ClientConstructor(
     'localhost:50051',
-    credentials.createInsecure()
-  )
+    grpc.ChannelCredentials.createInsecure()
+  ) as unknown) as GrpcClient<CourseService>
 })
 
 describe('updateCourseDatabase', () => {
@@ -64,16 +74,12 @@ describe('updateCourseDatabase', () => {
             })),
         })
       )
-      const req = new UpdateCourseDatabaseRequest()
-      req.setYear(2020)
-      client.updateCourseDatabase(req, (err, value) => {
+      client.updateCourseDatabase({ year: 2020 }, (err, value) => {
         expect(err).toBeFalsy()
         expect(value).toBeTruthy()
         if (!value) throw new Error()
-        expect(value.getInsertedcoursesList().length).toBe(testData.length / 5)
-        expect(value.getUpdatedcoursesList().length).toBe(
-          (testData.length / 5) * 4
-        )
+        expect(value.insertedCourses.length).toBe(testData.length / 5)
+        expect(value.updatedCourses.length).toBe((testData.length / 5) * 4)
 
         done()
       })
@@ -93,9 +99,8 @@ describe('updateCourseDatabase', () => {
           updatedCourses: [],
         })
       )
-      const req = new UpdateCourseDatabaseRequest()
-      req.setYear(2020)
-      client.updateCourseDatabase(req, (err, value) => {
+
+      client.updateCourseDatabase({ year: 2020 }, (err, value) => {
         expect(err).toBeTruthy()
         if (!err) throw new Error()
         expect(err.code).toBe(Status.UNKNOWN)
@@ -114,14 +119,12 @@ describe('getCourses', () => {
       createDBCourse(testData[0], 2020, ids[0]),
       createDBCourse(testData[1], 2020, ids[1]),
     ])
-    const req = new GetCoursesRequest()
-    req.setIdsList(testids)
-    client.getCourses(req, (err, res) => {
+    client.getCourses({ ids: testids }, (err, res) => {
       expect(err).toBeNull()
       expect(res).toBeTruthy()
       if (!res) throw new Error()
-      res.getCoursesList().forEach((c, i) => {
-        expect(c.getId()).toBe(testids[i])
+      res.courses.forEach((c, i) => {
+        expect(c.id).toBe(testids[i])
       })
       done()
     })
@@ -130,9 +133,7 @@ describe('getCourses', () => {
   test('notfound', async (done) => {
     const testids = [v4(), v4()]
     mocked(getCoursesUseCase).mockImplementation(async (ids) => [])
-    const req = new GetCoursesRequest()
-    req.setIdsList(testids)
-    client.getCourses(req, (err, _) => {
+    client.getCourses({ ids: testids }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.NOT_FOUND)
@@ -147,9 +148,8 @@ describe('getCourses', () => {
     mocked(getCoursesUseCase).mockImplementation(async (ids) => [
       createDBCourse(testData[0], 2020, testids[0]),
     ])
-    const req = new GetCoursesRequest()
-    req.setIdsList(testids)
-    client.getCourses(req, (err, _) => {
+
+    client.getCourses({ ids: testids }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.NOT_FOUND)
@@ -162,9 +162,7 @@ describe('getCourses', () => {
   test('duplicated ids', async (done) => {
     const testid = v4()
     mocked(getCoursesUseCase).mockImplementation(async (ids) => [])
-    const req = new GetCoursesRequest()
-    req.setIdsList([testid, testid])
-    client.getCourses(req, (err, _) => {
+    client.getCourses({ ids: [testid, testid] }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.INVALID_ARGUMENT)
@@ -183,22 +181,13 @@ describe('getCoursesByCode', () => {
       createDBCourse(testData[0], 2020, v4()),
       createDBCourse(testData[1], 2020, v4()),
     ])
-    const req = new GetCoursesByCodeRequest()
-    req.setConditionsList(
-      conditions.map((c) => {
-        const r = new GetCoursesByCodeRequestCondition()
-        r.setYear(c.year)
-        r.setCode(c.code)
-        return r
-      })
-    )
-    client.getCoursesByCode(req, (err, res) => {
+    client.getCoursesByCode({ conditions }, (err, res) => {
       expect(err).toBeNull()
       expect(res).toBeTruthy()
       if (!res) throw new Error()
-      res.getCoursesList().forEach((c, i) => {
-        expect(c.getYear()).toBe(conditions[i].year)
-        expect(c.getCode()).toBe(conditions[i].code)
+      res.courses.forEach((c, i) => {
+        expect(c.year).toBe(conditions[i].year)
+        expect(c.code).toBe(conditions[i].code)
       })
       done()
     })
@@ -210,16 +199,7 @@ describe('getCoursesByCode', () => {
       { year: 2020, code: testData[1].code },
     ]
     mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [])
-    const req = new GetCoursesByCodeRequest()
-    req.setConditionsList(
-      conditions.map((c) => {
-        const r = new GetCoursesByCodeRequestCondition()
-        r.setYear(c.year)
-        r.setCode(c.code)
-        return r
-      })
-    )
-    client.getCoursesByCode(req, (err, _) => {
+    client.getCoursesByCode({ conditions }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.NOT_FOUND)
@@ -237,16 +217,7 @@ describe('getCoursesByCode', () => {
     mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [
       createDBCourse(testData[0], 2020, v4()),
     ])
-    const req = new GetCoursesByCodeRequest()
-    req.setConditionsList(
-      conditions.map((c) => {
-        const r = new GetCoursesByCodeRequestCondition()
-        r.setYear(c.year)
-        r.setCode(c.code)
-        return r
-      })
-    )
-    client.getCoursesByCode(req, (err, _) => {
+    client.getCoursesByCode({ conditions }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.NOT_FOUND)
@@ -262,16 +233,7 @@ describe('getCoursesByCode', () => {
       { year: 2020, code: testData[0].code },
     ]
     mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [])
-    const req = new GetCoursesByCodeRequest()
-    req.setConditionsList(
-      conditions.map((c) => {
-        const r = new GetCoursesByCodeRequestCondition()
-        r.setYear(c.year)
-        r.setCode(c.code)
-        return r
-      })
-    )
-    client.getCoursesByCode(req, (err, _) => {
+    client.getCoursesByCode({ conditions }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.INVALID_ARGUMENT)
@@ -285,13 +247,12 @@ describe('listAllCourses', () => {
     mocked(listAllCoursesUseCase).mockImplementation(async () =>
       testData.map((c) => createDBCourse(c, 2020, v4()))
     )
-    const req = new ListAllCoursesRequest()
-    client.listAllCourses(req, (err, res) => {
+    client.listAllCourses({}, (err, res) => {
       expect(err).toBeNull()
       expect(res).toBeTruthy()
       if (!res) throw new Error()
 
-      expect(res.getCoursesList().length).toBe(testData.length)
+      expect(res.courses.length).toBe(testData.length)
       done()
     })
   })
