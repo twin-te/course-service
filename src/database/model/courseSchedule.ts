@@ -17,7 +17,7 @@ export class CourseSchedule {
 
   @ManyToOne(() => Course, (r) => r.schedules)
   @JoinColumn({ name: 'course_id' })
-  couseId!: string
+  courseId!: string
 
   @Column({
     name: 'module',

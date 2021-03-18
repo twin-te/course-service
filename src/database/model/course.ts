@@ -80,7 +80,7 @@ export class Course {
   })
   methods!: CourseMethod[]
 
-  @OneToMany(() => CourseSchedule, (r) => r.couseId, {
+  @OneToMany(() => CourseSchedule, (r) => r.courseId, {
     cascade: true,
     onDelete: 'CASCADE',
   })
