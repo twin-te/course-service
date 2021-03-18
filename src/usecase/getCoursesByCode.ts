@@ -1,5 +1,6 @@
 import { getConnection } from 'typeorm'
 import { Course } from '../database/model/course'
+import { InvalidArgumentError, NotFoundError } from '../error'
 
 type GetCoursesByCodeUseCaseProps = {
   year: number
@@ -10,12 +11,28 @@ type GetCoursesByCodeUseCaseProps = {
  * 指定された年度と科目番号から情報を取得する
  * @param props 条件
  */
-export function getCoursesByCodeUseCase(
+export async function getCoursesByCodeUseCase(
   props: GetCoursesByCodeUseCaseProps
 ): Promise<Course[]> {
+  if (
+    props.length !==
+    [...new Set(props.map((cc) => `${cc.year}${cc.code}`))].length
+  )
+    throw new InvalidArgumentError(
+      '指定された引数に重複したidが含まれています。'
+    )
   const repository = getConnection().getRepository(Course)
-  return repository.find({
+  const res = await repository.find({
     where: props,
     relations: ['recommendedGrades', 'methods', 'schedules'],
   })
+  if (res.length !== props.length)
+    throw new NotFoundError(
+      '指定されたidのコースが見つかりませんでした',
+      undefined,
+      props
+        .filter((i) => !res.find((c) => c.year === i.year && c.code === i.code))
+        .map((p) => `${p.year}:${p.code}`)
+    )
+  else return res
 }

@@ -26,6 +26,7 @@ import {
   ListAllCoursesResponse,
   UpdateCourseDatabaseResponse,
 } from '../../generated'
+import { toGrpcError } from './converter'
 
 /**
  * grpcサーバのCourseService実装
@@ -45,34 +46,14 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
         })
       )
     } catch (e) {
-      callback(e)
+      callback(toGrpcError(e))
     }
   },
 
   async getCourses({ request }, callback) {
     try {
       const ids = request.ids
-
-      if (ids.length !== [...new Set(ids)].length) {
-        callback({
-          code: Status.INVALID_ARGUMENT,
-          details: `指定された引数に重複したidが含まれています。`,
-        })
-        return
-      }
-
       const courses = await getCoursesUseCase(ids)
-      if (courses.length !== request.ids.length) {
-        const metadata = new Metadata()
-        const missing = ids.filter((i) => !courses.find((c) => c.id === i))
-        metadata.set('ids', missing.join(','))
-        callback({
-          code: Status.NOT_FOUND,
-          details: `指定されたIDの講義が見つかりませんでした。詳細はmetadataを参照してください。`,
-          metadata,
-        })
-        return
-      }
       callback(
         null,
         GetCoursesResponse.create({
@@ -80,7 +61,7 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
         })
       )
     } catch (e) {
-      callback(e)
+      callback(toGrpcError(e))
     }
   },
 
@@ -94,41 +75,17 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
         })
       )
     } catch (e) {
-      callback(e)
+      callback(toGrpcError(e))
     }
   },
 
   async getCoursesByCode({ request }, callback) {
     try {
       const conditions = request.conditions
-      if (
-        conditions.length !==
-        [...new Set(conditions.map((cc) => `${cc.year}${cc.code}`))].length
-      ) {
-        callback({
-          code: Status.INVALID_ARGUMENT,
-          details: `指定された引数に重複したidが含まれています。`,
-        })
-        return
-      }
-
       const courses = await getCoursesByCodeUseCase(
         conditions.map((cc) => ({ year: cc.year, code: cc.code }))
       )
 
-      if (courses.length !== conditions.length) {
-        const metadata = new Metadata()
-        const missing = conditions.filter(
-          (i) => !courses.find((c) => c.year === i.year && c.code === i.code)
-        )
-        metadata.set('conditions', missing.join(','))
-        callback({
-          code: Status.NOT_FOUND,
-          details: `指定された条件の講義が見つかりませんでした。詳細はmetadataを参照してください。`,
-          metadata,
-        })
-        return
-      }
       callback(
         null,
         GetCoursesByCodeResponse.create({
@@ -136,7 +93,7 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
         })
       )
     } catch (e) {
-      callback(e)
+      callback(toGrpcError(e))
     }
   },
 })

@@ -24,6 +24,7 @@ import {
 } from '../../generated'
 import { GrpcClient } from '../../src/grpc/type'
 import { CourseSchedule } from '../../src/database/model/courseSchedule'
+import { InvalidArgumentError, NotFoundError } from '../../src/error'
 
 jest.mock('../../src/usecase/fetchCoursesFromKdb')
 jest.mock('../../src/usecase/updateCourseDatabase')
@@ -132,37 +133,29 @@ describe('getCourses', () => {
 
   test('notfound', async (done) => {
     const testids = [v4(), v4()]
-    mocked(getCoursesUseCase).mockImplementation(async (ids) => [])
+    mocked(getCoursesUseCase).mockImplementation(async (ids) => {
+      throw new NotFoundError(
+        '指定されたidのコースが見つかりませんでした',
+        undefined,
+        ids
+      )
+    })
     client.getCourses({ ids: testids }, (err, _) => {
       expect(err).toBeTruthy()
-      if (!err) throw new Error()
-      expect(err.code).toBe(Status.NOT_FOUND)
-      expect(typeof err.metadata.get('ids')[0]).toBe('string')
-      expect((err.metadata.get('ids')[0] as string).split(',')).toEqual(testids)
+      expect(err?.code).toBe(Status.NOT_FOUND)
+      expect(typeof err?.metadata.get('resources')[0]).toBe('string')
+      expect((err?.metadata.get('resources')[0] as string).split(',')).toEqual(
+        testids
+      )
       done()
     })
   })
 
-  test('notfound2', async (done) => {
-    const testids = [v4(), v4()]
-    mocked(getCoursesUseCase).mockImplementation(async (ids) => [
-      createDBCourse(testData[0], 2020, testids[0]),
-    ])
-
-    client.getCourses({ ids: testids }, (err, _) => {
-      expect(err).toBeTruthy()
-      if (!err) throw new Error()
-      expect(err.code).toBe(Status.NOT_FOUND)
-      expect(typeof err.metadata.get('ids')[0]).toBe('string')
-      expect(err.metadata.get('ids')[0]).toEqual(testids[1])
-      done()
+  test('invalid argument', async (done) => {
+    mocked(getCoursesUseCase).mockImplementation(async (ids) => {
+      throw new InvalidArgumentError()
     })
-  })
-
-  test('duplicated ids', async (done) => {
-    const testid = v4()
-    mocked(getCoursesUseCase).mockImplementation(async (ids) => [])
-    client.getCourses({ ids: [testid, testid] }, (err, _) => {
+    client.getCourses({ ids: [] }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.INVALID_ARGUMENT)
@@ -198,45 +191,35 @@ describe('getCoursesByCode', () => {
       { year: 2020, code: testData[0].code },
       { year: 2020, code: testData[1].code },
     ]
-    mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [])
+    mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => {
+      throw new NotFoundError(
+        '指定されたidのコースが見つかりませんでした',
+        undefined,
+        ids.map((i) => `${i.year}:${i.code}`)
+      )
+    })
     client.getCoursesByCode({ conditions }, (err, _) => {
       expect(err).toBeTruthy()
-      if (!err) throw new Error()
-      expect(err.code).toBe(Status.NOT_FOUND)
-      expect(typeof err.metadata.get('conditions')[0]).toBe('string')
+      expect(err?.code).toBe(Status.NOT_FOUND)
+      expect(typeof err?.metadata.get('resources')[0]).toBe('string')
       // expect((err.metadata.get('conditions')[0] as string).split(',')).toEqual(testids)
       done()
     })
   })
 
-  test('notfound2', async (done) => {
+  test('invalid argument', async (done) => {
     const conditions = [
       { year: 2020, code: testData[0].code },
       { year: 2020, code: testData[1].code },
     ]
-    mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [
-      createDBCourse(testData[0], 2020, v4()),
-    ])
-    client.getCoursesByCode({ conditions }, (err, _) => {
-      expect(err).toBeTruthy()
-      if (!err) throw new Error()
-      expect(err.code).toBe(Status.NOT_FOUND)
-      expect(typeof err.metadata.get('conditions')[0]).toBe('string')
-      // expect(err.metadata.get('conditions')[0]).toEqual(testids[1])
-      done()
+    mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => {
+      throw new InvalidArgumentError()
     })
-  })
-
-  test('duplicated conditions', async (done) => {
-    const conditions = [
-      { year: 2020, code: testData[0].code },
-      { year: 2020, code: testData[0].code },
-    ]
-    mocked(getCoursesByCodeUseCase).mockImplementation(async (ids) => [])
     client.getCoursesByCode({ conditions }, (err, _) => {
       expect(err).toBeTruthy()
       if (!err) throw new Error()
       expect(err.code).toBe(Status.INVALID_ARGUMENT)
+      // expect(err.metadata.get('conditions')[0]).toEqual(testids[1])
       done()
     })
   })

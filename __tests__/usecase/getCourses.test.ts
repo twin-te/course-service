@@ -8,6 +8,7 @@ import { createDBCourse } from '../../src/grpc/converter'
 import { loadTestData } from '../_loadTestData'
 import { compareCourseWithoutId } from '../_comparator'
 import { clearDB } from '../_cleardb'
+import { InvalidArgumentError, NotFoundError } from '../../src/error'
 const initialData = loadTestData()
 
 let ids: string[] = []
@@ -36,9 +37,18 @@ test('指定した授業データが取得できる', async () => {
   )
 })
 
-test('存在しないidの情報は帰らない', async () => {
-  const res = await getCoursesUseCase([v4(), v4()])
-  expect(res.length).toBe(0)
+test('id重複でエラー', () =>
+  expect(getCoursesUseCase([ids[0], ids[0]])).rejects.toThrow(
+    InvalidArgumentError
+  ))
+test('一部の取得に失敗してもエラー', () => {
+  return expect(getCoursesUseCase([ids[0], v4()])).rejects.toThrow(
+    NotFoundError
+  )
+})
+
+test('存在しないidの情報は帰らない', () => {
+  return expect(getCoursesUseCase([v4(), v4()])).rejects.toThrow(NotFoundError)
 })
 
 afterAll(() => {
