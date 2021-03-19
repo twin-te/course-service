@@ -17,4 +17,4 @@ const generate = async (count: number) => {
   )
 }
 
-generate(50)
+generate(500)
