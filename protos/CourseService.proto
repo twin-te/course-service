@@ -9,6 +9,35 @@ service CourseService {
   rpc GetCoursesByCode(GetCoursesByCodeRequest) returns (GetCoursesByCodeResponse);
   /* データベースが持つ全てのコースを取得する */
   rpc ListAllCourses(ListAllCoursesRequest) returns (ListAllCoursesResponse);
+
+  rpc SearchCourse(SearchCourseRequest) returns (SearchCourseResponse);
+}
+
+enum Module {
+  SpringA = 0;
+  SpringB = 1;
+  SpringC = 2;
+  FallA = 3;
+  FallB = 4;
+  FallC = 5;
+  SummerVacation = 6;
+  SpringVacation = 7;
+  Annual = 8;
+  UnknownModule = 9;
+}
+
+enum Day { 
+  Sun = 0;
+  Mon = 1;
+  Tue = 2;
+  Wed = 3;
+  Thu = 4;
+  Fri = 5;
+  Sat = 6;
+  Intensive = 7;
+  Appointment = 8;
+  AnyTime = 9;
+  UnknownDay = 10;
 }
 
 message UpdateCourseDatabaseRequest {
@@ -27,33 +56,6 @@ message ReportCourseData {
 }
 
 message CourseSchedule {
-  enum Module {
-    SpringA = 0;
-    SpringB = 1;
-    SpringC = 2;
-    FallA = 3;
-    FallB = 4;
-    FallC = 5;
-    SummerVacation = 6;
-    SpringVacation = 7;
-    Annual = 8;
-    UnknownModule = 9;
-  }
-  
-  enum Day { 
-    Sun = 0;
-    Mon = 1;
-    Tue = 2;
-    Wed = 3;
-    Thu = 4;
-    Fri = 5;
-    Sat = 6;
-    Intensive = 7;
-    Appointment = 8;
-    AnyTime = 9;
-    UnknownDay = 10;
-  }
-
   Module module = 1;
   Day day = 2;
   int32 period = 3;
@@ -106,5 +108,48 @@ message GetCoursesByCodeResponse {
 message ListAllCoursesRequest {}
 
 message ListAllCoursesResponse {
+  repeated Course courses = 1;
+}
+
+message SearchCourseRequestPeriods {
+  repeated int32 periods = 1;
+}
+
+message SearchCourseRequestModules {
+  repeated bool Sun = 1;
+  repeated bool Mon = 2;
+  repeated bool Tue = 3;
+  repeated bool Wed = 4;
+  repeated bool Thu = 5;
+  repeated bool Fri = 6;
+  repeated bool Sat = 7;
+  repeated bool Intensive = 8;
+  repeated bool Appointment = 9;
+  repeated bool AnyTime = 10;
+}
+
+message SearchCourseRequestTimetable {
+  SearchCourseRequestModules SpringA = 1;
+  SearchCourseRequestModules SpringB = 2;
+  SearchCourseRequestModules SpringC = 3;
+  SearchCourseRequestModules FallA = 4;
+  SearchCourseRequestModules FallB = 5;
+  SearchCourseRequestModules FallC = 6;
+  SearchCourseRequestModules SummerVacation = 7;
+  SearchCourseRequestModules SpringVacation = 8;
+}
+
+message SearchCourseRequest {
+  int32 year = 1;
+  repeated string keywords = 2;
+  SearchCourseRequestTimetable timetable = 3;
+  enum SearchMode {
+    Cover = 0;
+    Contain = 1;
+  }
+  SearchMode searchMode = 4;
+}
+
+message SearchCourseResponse {
   repeated Course courses = 1;
 }

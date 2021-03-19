@@ -24,9 +24,11 @@ import {
   ICourse,
   ICourseSchedule,
   ListAllCoursesResponse,
+  SearchCourseResponse,
   UpdateCourseDatabaseResponse,
 } from '../../generated'
 import { toGrpcError } from './converter'
+import { searchCourseUseCase } from '../usecase/searchCourse'
 
 /**
  * grpcサーバのCourseService実装
@@ -96,6 +98,51 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
       callback(toGrpcError(e))
     }
   },
+  async searchCourse({ request }, callback) {
+    try {
+      let timetable
+
+      if (request.timetable) {
+        timetable = [
+          request.timetable.SpringA,
+          request.timetable.SpringB,
+          request.timetable.SpringC,
+          request.timetable.FallA,
+          request.timetable.FallB,
+          request.timetable.FallC,
+          request.timetable.SummerVacation,
+          request.timetable.SpringVacation,
+        ]
+          .filter((d) => d)
+          .map((m) => [
+            m.Sun,
+            m.Mon,
+            m.Tue,
+            m.Wed,
+            m.Thu,
+            m.Fri,
+            m.Sat,
+            m.Intensive,
+            m.Appointment,
+            m.AnyTime,
+          ])
+      }
+
+      const courses = await searchCourseUseCase({
+        year: request.year,
+        keywords: request.keywords,
+        searchMode: request.searchMode,
+        timetable,
+      })
+
+      callback(
+        null,
+        SearchCourseResponse.create({ courses: courses.map(createGrpcCourse) })
+      )
+    } catch (e) {
+      callback(toGrpcError(e))
+    }
+  },
 })
 
 /**
@@ -129,7 +176,7 @@ function applyLogger<T extends UntypedServiceImplementation>(i: T): T {
         callback: sendUnaryData<any>
       ) {
         if (logger.isTraceEnabled())
-          logger.trace('REQUEST', originalImpl.name, call.request.toObject())
+          logger.trace('REQUEST', originalImpl.name, call.request)
         else logger.info('REQUEST', originalImpl.name)
 
         const originalCallback = callback
