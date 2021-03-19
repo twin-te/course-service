@@ -22,32 +22,32 @@ function checkScheduleContain(
   course: Course,
   conditions: { module?: Module; day?: Day; periods?: number[] }[]
 ) {
-  expect(
-    course.schedules.every((s) =>
-      conditions.some(
-        (c) =>
-          (!s.module || s.module === c.module) &&
-          (!s.day || s.day === c.day) &&
-          (!c.periods || c.periods?.find((p) => s.period))
-      )
+  const res = course.schedules.every((s) =>
+    conditions.some(
+      (c) =>
+        (typeof c.module === 'undefined' || s.module === c.module) &&
+        (typeof c.day === 'undefined' || s.day === c.day) &&
+        (typeof c.periods === 'undefined' || c.periods.includes(s.period))
     )
-  ).toBe(true)
+  )
+  if (!res) console.error('失敗', course)
+  expect(res).toBe(true)
 }
 
 function checkScheduleCover(
   course: Course,
   conditions: { module?: Module; day?: Day; periods?: number[] }[]
 ) {
-  expect(
-    course.schedules.some((s) =>
-      conditions.some(
-        (c) =>
-          (!s.module || s.module === c.module) &&
-          (!s.day || s.day === c.day) &&
-          (!c.periods || c.periods?.find((p) => s.period))
-      )
+  const res = course.schedules.some((s) =>
+    conditions.some(
+      (c) =>
+        (typeof c.module === 'undefined' || s.module === c.module) &&
+        (typeof c.day === 'undefined' || s.day === c.day) &&
+        (typeof c.periods === 'undefined' || c.periods.includes(s.period))
     )
-  ).toBe(true)
+  )
+  if (!res) console.error('失敗', course)
+  expect(res).toBe(true)
 }
 
 test('キーワード検索単体', async () => {
@@ -56,7 +56,7 @@ test('キーワード検索単体', async () => {
     keywords: ['情報'],
     searchMode: SearchMode.Cover,
   })
-  console.log(res.length)
+  expect(res.length > 0).toBe(true)
   res.forEach((c) => expect(c.name.includes('情報')).toBe(true))
 })
 
@@ -66,6 +66,7 @@ test('キーワード複数', async () => {
     keywords: ['情報', 'スポーツ'],
     searchMode: SearchMode.Cover,
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) =>
     expect(c.name.includes('情報') || c.name.includes('スポーツ')).toBe(true)
   )
@@ -77,6 +78,7 @@ test('キーワードなしで全部', async () => {
     keywords: [],
     searchMode: SearchMode.Cover,
   })
+  expect(res.length > 0).toBe(true)
   expect(res.length).toBe(initialData.length)
 })
 
@@ -87,13 +89,38 @@ test('時間割 contain1', async () => {
     searchMode: SearchMode.Contain,
     timetable: {
       [Module.SpringA]: {
-        [Day.Wed]: [false, false, false, false, false, true, true],
+        [Day.Tue]: [
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+      },
+      [Module.SpringB]: {
+        [Day.Tue]: [
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
       },
     },
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [
-      { module: Module.SpringA, day: Day.Wed, periods: [5, 6] },
+      { module: Module.SpringA, day: Day.Tue, periods: [1, 2] },
+      { module: Module.SpringB, day: Day.Tue, periods: [1, 2] },
     ])
   )
 })
@@ -105,13 +132,38 @@ test('時間割 contain2', async () => {
     searchMode: SearchMode.Contain,
     timetable: {
       [Module.SpringA]: {
-        [Day.Wed]: [false, false, false, false, false, false, true],
+        [Day.Tue]: [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+      },
+      [Module.SpringB]: {
+        [Day.Tue]: [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
       },
     },
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [
-      { module: Module.SpringA, day: Day.Wed, periods: [5] },
+      { module: Module.SpringA, day: Day.Tue, periods: [2] },
+      { module: Module.SpringB, day: Day.Tue, periods: [2] },
     ])
   )
 })
@@ -123,9 +175,16 @@ test('時間割 contain3', async () => {
     searchMode: SearchMode.Contain,
     timetable: {
       [Module.SpringA]: new Array(8).fill(new Array(7).fill(true)),
+      [Module.SpringB]: new Array(8).fill(new Array(7).fill(true)),
     },
   })
-  res.forEach((c) => checkScheduleContain(c, [{ module: Module.SpringA }]))
+  expect(res.length > 0).toBe(true)
+  res.forEach((c) =>
+    checkScheduleContain(c, [
+      { module: Module.SpringA },
+      { module: Module.SpringB },
+    ])
+  )
 })
 
 test('時間割 contain4', async () => {
@@ -137,6 +196,7 @@ test('時間割 contain4', async () => {
       [Day.Intensive]: [true, false, false, false, false, false, false],
     }),
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [{ day: Day.Intensive, periods: [0] }])
   )
@@ -146,13 +206,14 @@ test('時間割 cover1', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
     keywords: [],
-    searchMode: SearchMode.Contain,
+    searchMode: SearchMode.Cover,
     timetable: {
       [Module.SpringA]: {
         [Day.Wed]: [false, false, false, false, false, true, true],
       },
     },
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) =>
     checkScheduleCover(c, [
       { module: Module.SpringA, day: Day.Wed, periods: [5, 6] },
@@ -164,13 +225,14 @@ test('時間割 cover2', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
     keywords: [],
-    searchMode: SearchMode.Contain,
+    searchMode: SearchMode.Cover,
     timetable: {
       [Module.SpringA]: {
         [Day.Wed]: [false, false, false, false, false, false, true],
       },
     },
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) =>
     checkScheduleCover(c, [
       { module: Module.SpringA, day: Day.Wed, periods: [6] },
@@ -182,22 +244,24 @@ test('時間割 cover3', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
     keywords: [],
-    searchMode: SearchMode.Contain,
+    searchMode: SearchMode.Cover,
     timetable: {
       [Module.SpringA]: new Array(8).fill(new Array(7).fill(true)),
     },
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) => checkScheduleCover(c, [{ module: Module.SpringA }]))
 })
 
-test('時間割 contain4', async () => {
+test('時間割 cover4', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
     keywords: [],
-    searchMode: SearchMode.Contain,
+    searchMode: SearchMode.Cover,
     timetable: new Array(8).fill({
       [Day.Intensive]: new Array(8).fill(true),
     }),
   })
+  expect(res.length > 0).toBe(true)
   res.forEach((c) => checkScheduleCover(c, [{ day: Day.Intensive }]))
 })

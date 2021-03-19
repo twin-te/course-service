@@ -111,7 +111,7 @@ export async function searchCourseUseCase({
             }
           )`
           )
-          .join(' or ')}
+          .join(' and ')}
       )
       `
 
@@ -123,12 +123,12 @@ export async function searchCourseUseCase({
         parameters[`p_${i}_${ii}`] = p
       })
     })
-
     const [
       escapedQuery,
       escapedParameters,
     ] = getConnection().driver.escapeQueryWithParameters(sql, parameters, {})
 
+    // console.log(escapedQuery, escapedParameters)
     // 検索結果の講義id配列
     const ids = (await repo.query(escapedQuery, escapedParameters)).map(
       (r: any) => r.id
