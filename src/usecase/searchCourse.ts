@@ -3,15 +3,16 @@ import { getConnection, In, Raw } from 'typeorm'
 import { Day, Module } from '../database/model/enums'
 import { Course } from '../database/model/course'
 
-enum SearchMode {
+export enum SearchMode {
   Cover, // 指定した時限と講義の開講日時が一部でも被っていれば対象とみなす
   Contain, // 指定した時限に収まっている講義のみ対象とみなす
 }
 
 type Input = {
+  /** 存在しない場合は全時限対象 */
   timetable?: {
     [module in keyof typeof Module]?: {
-      [day in keyof typeof Day]?: boolean[]
+      [day in keyof typeof Day]?: boolean[] // bool配列は[0限, 1限, ... , 8限] (0限は時限情報が無い講義に与えられている)
     }
   }
   keywords: string[]
@@ -42,7 +43,7 @@ export async function searchCourseUseCase({
             const periods = (timetable[parseInt(module)]![
               parseInt(day)
             ] as boolean[])
-              .map((v, i) => (v ? i + 1 : null))
+              .map((v, i) => (v ? i : null))
               .filter((v): v is number => v !== null)
             return {
               module: parseInt(module) as Module,
