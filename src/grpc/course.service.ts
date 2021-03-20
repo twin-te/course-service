@@ -23,12 +23,14 @@ import {
   GetCoursesResponse,
   ICourse,
   ICourseSchedule,
+  ISearchCourseRequestModules,
   ListAllCoursesResponse,
   SearchCourseResponse,
   UpdateCourseDatabaseResponse,
 } from '../../generated'
 import { toGrpcError } from './converter'
 import { searchCourseUseCase } from '../usecase/searchCourse'
+import { Day, Module } from '../database/model/enums'
 
 /**
  * grpcサーバのCourseService実装
@@ -100,40 +102,7 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
   },
   async searchCourse({ request }, callback) {
     try {
-      let timetable
-
-      if (request.timetable) {
-        timetable = [
-          request.timetable.SpringA,
-          request.timetable.SpringB,
-          request.timetable.SpringC,
-          request.timetable.FallA,
-          request.timetable.FallB,
-          request.timetable.FallC,
-          request.timetable.SummerVacation,
-          request.timetable.SpringVacation,
-        ]
-          .filter((d) => d)
-          .map((m) => [
-            m.Sun,
-            m.Mon,
-            m.Tue,
-            m.Wed,
-            m.Thu,
-            m.Fri,
-            m.Sat,
-            m.Intensive,
-            m.Appointment,
-            m.AnyTime,
-          ])
-      }
-
-      const courses = await searchCourseUseCase({
-        year: request.year,
-        keywords: request.keywords,
-        searchMode: request.searchMode,
-        timetable,
-      })
+      const courses = await searchCourseUseCase(request)
 
       callback(
         null,

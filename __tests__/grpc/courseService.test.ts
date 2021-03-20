@@ -25,12 +25,14 @@ import {
 import { GrpcClient } from '../../src/grpc/type'
 import { CourseSchedule } from '../../src/database/model/courseSchedule'
 import { InvalidArgumentError, NotFoundError } from '../../src/error'
+import { searchCourseUseCase, SearchMode } from '../../src/usecase/searchCourse'
 
 jest.mock('../../src/usecase/fetchCoursesFromKdb')
 jest.mock('../../src/usecase/updateCourseDatabase')
 jest.mock('../../src/usecase/getCourses')
 jest.mock('../../src/usecase/getCoursesByCode')
 jest.mock('../../src/usecase/listAllCourses')
+jest.mock('../../src/usecase/searchCourse')
 
 const testData = loadTestData()
 
@@ -236,6 +238,48 @@ describe('listAllCourses', () => {
       if (!res) throw new Error()
 
       expect(res.courses.length).toBe(testData.length)
+      done()
+    })
+  })
+})
+
+describe('searchCourse', () => {
+  test('success', (done) => {
+    const req = {
+      year: 2020,
+      searchMode: SearchMode.Contain,
+      keywords: ['情報', '線形'],
+      timetable: {
+        SpringA: {
+          Mon: [false, true, true, true, true, true, true],
+        },
+      },
+    }
+    const resCourse = createDBCourse(testData[0], 2020, v4())
+    mocked(searchCourseUseCase).mockImplementation(
+      async ({ year, searchMode, keywords, timetable }) => {
+        expect(year).toBe(req.year)
+        expect(searchMode).toBe(req.searchMode)
+        expect(keywords).toEqual(keywords)
+        expect(timetable?.SpringA?.Mon).toEqual(req.timetable.SpringA.Mon)
+
+        return [resCourse]
+      }
+    )
+
+    client.searchCourse(req, (err, res) => {
+      expect(err).toBeNull()
+      expect(res?.courses[0].id).toEqual(resCourse.id)
+      done()
+    })
+  })
+
+  test('failure', (done) => {
+    mocked(searchCourseUseCase).mockImplementation(() => {
+      throw new Error('Unexpected Error!')
+    })
+    client.searchCourse({}, (err, res) => {
+      expect(err?.code).toBe(Status.UNKNOWN)
       done()
     })
   })
