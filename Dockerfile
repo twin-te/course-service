@@ -19,6 +19,7 @@ LABEL org.opencontainers.image.source https://github.com/twin-te/course-service
 
 COPY --from=build-env /usr/src/app/dist ./dist
 COPY --from=build-env /usr/src/app/generated ./generated
+COPY --from=build-env /usr/src/app/protos ./protos
 COPY --from=build-env /usr/src/app/package.json .
 COPY --from=build-env /usr/src/app/yarn.lock .
 COPY --from=build-env /usr/src/app/.yarnrc .
