@@ -32,22 +32,24 @@ export async function searchCourseUseCase({
   if (timetable) {
     const conditions = Object.keys(timetable) // 全てのmoduleについて
       .map((module) =>
-        Object.keys(timetable[parseInt(module)]!) // 全てのdayについて
+        Object.keys(timetable[module as keyof typeof Module]!) // 全てのdayについて
           .filter((day) => {
             // 空配列or全てfalseの列は除外する
-            const periods = timetable[parseInt(module)]![parseInt(day)]
+            const periods = timetable[module as keyof typeof Module]![
+              day as keyof typeof Day
+            ]
             return periods && periods.length > 0 && periods.includes(true)
           })
           .map((day) => {
             // 指定された時限だけが数値で入っている配列
-            const periods = (timetable[parseInt(module)]![
-              parseInt(day)
+            const periods = (timetable[module as keyof typeof Module]![
+              day as keyof typeof Day
             ] as boolean[])
               .map((v, i) => (v ? i : null))
               .filter((v): v is number => v !== null)
             return {
-              module: parseInt(module) as Module,
-              day: parseInt(day) as Day,
+              module: Module[module as keyof typeof Module],
+              day: Day[day as keyof typeof Day],
               periods,
             }
           })
