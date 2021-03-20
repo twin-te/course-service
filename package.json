@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env LOG_LEVEL=trace ts-node ./src/index.ts",
-    "build": "tsc",
+    "build": "rm -rf ./dist && tsc && rm -rf ./dist/__tests__ && mv ./dist/src/* ./dist/",
     "proto": "./proto-gen.sh",
     "test": "cross-env LOG_LEVEL=off jest --runInBand --coverage",
     "client": "grpcc --proto ./protos/CourseService.proto --address localhost:50051 -i",
