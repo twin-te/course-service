@@ -50,6 +50,31 @@ function checkScheduleCover(
   expect(res).toBe(true)
 }
 
+function fillAllModuleWith(c: any) {
+  return {
+    SpringA: c,
+    SpringB: c,
+    SpringC: c,
+    FallA: c,
+    FallB: c,
+    FallC: c,
+    SummerVacation: c,
+    SpringVacation: c,
+  }
+}
+
+function fillAllDayWith(c: boolean[]) {
+  return {
+    Sun: c,
+    Mon: c,
+    Tue: c,
+    Wed: c,
+    Thu: c,
+    Fri: c,
+    Sta: c,
+  }
+}
+
 test('キーワード検索単体', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
@@ -88,31 +113,11 @@ test('時間割 contain1', async () => {
     keywords: [],
     searchMode: SearchMode.Contain,
     timetable: {
-      [Module.SpringA]: {
-        [Day.Tue]: [
-          false,
-          true,
-          true,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
+      SpringA: {
+        Tue: [false, true, true, false, false, false, false, false, false],
       },
-      [Module.SpringB]: {
-        [Day.Tue]: [
-          false,
-          true,
-          true,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
+      SpringB: {
+        Tue: [false, true, true, false, false, false, false, false, false],
       },
     },
   })
@@ -131,31 +136,11 @@ test('時間割 contain2', async () => {
     keywords: [],
     searchMode: SearchMode.Contain,
     timetable: {
-      [Module.SpringA]: {
-        [Day.Tue]: [
-          false,
-          false,
-          true,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
+      SpringA: {
+        Tue: [false, false, true, false, false, false, false, false, false],
       },
-      [Module.SpringB]: {
-        [Day.Tue]: [
-          false,
-          false,
-          true,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-        ],
+      SpringB: {
+        Tue: [false, false, true, false, false, false, false, false, false],
       },
     },
   })
@@ -174,8 +159,8 @@ test('時間割 contain3', async () => {
     keywords: [],
     searchMode: SearchMode.Contain,
     timetable: {
-      [Module.SpringA]: new Array(8).fill(new Array(7).fill(true)),
-      [Module.SpringB]: new Array(8).fill(new Array(7).fill(true)),
+      SpringA: fillAllDayWith(new Array(7).fill(true)),
+      SpringB: fillAllDayWith(new Array(7).fill(true)),
     },
   })
   expect(res.length > 0).toBe(true)
@@ -192,8 +177,8 @@ test('時間割 contain4', async () => {
     year: 2020,
     keywords: [],
     searchMode: SearchMode.Contain,
-    timetable: new Array(8).fill({
-      [Day.Intensive]: [true, false, false, false, false, false, false],
+    timetable: fillAllModuleWith({
+      Intensive: [true, false, false, false, false, false, false],
     }),
   })
   expect(res.length > 0).toBe(true)
@@ -208,8 +193,8 @@ test('時間割 cover1', async () => {
     keywords: [],
     searchMode: SearchMode.Cover,
     timetable: {
-      [Module.SpringA]: {
-        [Day.Wed]: [false, false, false, false, false, true, true],
+      SpringA: {
+        Wed: [false, false, false, false, false, true, true],
       },
     },
   })
@@ -227,8 +212,8 @@ test('時間割 cover2', async () => {
     keywords: [],
     searchMode: SearchMode.Cover,
     timetable: {
-      [Module.SpringA]: {
-        [Day.Wed]: [false, false, false, false, false, false, true],
+      SpringA: {
+        Wed: [false, false, false, false, false, false, true],
       },
     },
   })
@@ -246,7 +231,7 @@ test('時間割 cover3', async () => {
     keywords: [],
     searchMode: SearchMode.Cover,
     timetable: {
-      [Module.SpringA]: new Array(8).fill(new Array(7).fill(true)),
+      SpringA: fillAllDayWith(new Array(7).fill(true)),
     },
   })
   expect(res.length > 0).toBe(true)
@@ -258,8 +243,8 @@ test('時間割 cover4', async () => {
     year: 2020,
     keywords: [],
     searchMode: SearchMode.Cover,
-    timetable: new Array(8).fill({
-      [Day.Intensive]: new Array(8).fill(true),
+    timetable: fillAllModuleWith({
+      Intensive: new Array(8).fill(true),
     }),
   })
   expect(res.length > 0).toBe(true)
