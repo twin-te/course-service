@@ -8,16 +8,13 @@ import { searchCourseUseCase, SearchMode } from '../../src/usecase/searchCourse'
 import { clearDB } from '../_cleardb'
 import { loadTestData } from '../_loadTestData'
 
-const initialData = loadTestData()
+/* ----------------テスト用ユーティリティ関数---------------- */
 
-beforeAll(async () => {
-  await connectDatabase()
-  await clearDB()
-  await getRepository(Course).save(
-    initialData.map((c) => createDBCourse(c, 2020, v4()))
-  )
-})
-
+/**
+ * コースが指定された時限内に収まっているかチェック
+ * @param course チェックするコース
+ * @param conditions 条件
+ */
 function checkScheduleContain(
   course: Course,
   conditions: { module?: Module; day?: Day; periods?: number[] }[]
@@ -34,6 +31,11 @@ function checkScheduleContain(
   expect(res).toBe(true)
 }
 
+/**
+ * コースが指定された時限中に開講されているかチェック
+ * @param course チェックするコース
+ * @param conditions 条件
+ */
 function checkScheduleCover(
   course: Course,
   conditions: { module?: Module; day?: Day; periods?: number[] }[]
@@ -50,6 +52,11 @@ function checkScheduleCover(
   expect(res).toBe(true)
 }
 
+/**
+ * 全モジュールを指定された値で埋めるユーティリティ
+ * @param c 埋める値
+ * @returns 結果
+ */
 function fillAllModuleWith(c: any) {
   return {
     SpringA: c,
@@ -63,6 +70,11 @@ function fillAllModuleWith(c: any) {
   }
 }
 
+/**
+ * 全曜日をしてされた値で埋めるユーティリティ
+ * @param c 埋める値
+ * @returns 結果
+ */
 function fillAllDayWith(c: boolean[]) {
   return {
     Sun: c,
@@ -74,6 +86,18 @@ function fillAllDayWith(c: boolean[]) {
     Sta: c,
   }
 }
+
+/* ----------------テストここから---------------- */
+
+const initialData = loadTestData()
+
+beforeAll(async () => {
+  await connectDatabase()
+  await clearDB()
+  await getRepository(Course).save(
+    initialData.map((c) => createDBCourse(c, 2020, v4()))
+  )
+})
 
 test('キーワード検索単体', async () => {
   const res = await searchCourseUseCase({
