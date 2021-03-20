@@ -31,6 +31,7 @@ export async function searchCourseUseCase({
   // 時間の指定がある場合
   if (timetable) {
     const conditions = Object.keys(timetable) // 全てのmoduleについて
+      .filter((module) => timetable[module as keyof typeof Module]) // 指定されてないとnullになるので排除
       .map((module) =>
         Object.keys(timetable[module as keyof typeof Module]!) // 全てのdayについて
           .filter((day) => {
