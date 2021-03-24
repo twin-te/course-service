@@ -87,7 +87,8 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
     try {
       const conditions = request.conditions
       const courses = await getCoursesByCodeUseCase(
-        conditions.map((cc) => ({ year: cc.year, code: cc.code }))
+        conditions.map((cc) => ({ year: cc.year, code: cc.code })),
+        request.suppressNotFoundError
       )
 
       callback(

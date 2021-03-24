@@ -10,9 +10,11 @@ type GetCoursesByCodeUseCaseProps = {
 /**
  * 指定された年度と科目番号から情報を取得する
  * @param props 条件
+ * @param suppressNotFoundError 一部の講義が見つからなくてもエラーにしない
  */
 export async function getCoursesByCodeUseCase(
-  props: GetCoursesByCodeUseCaseProps
+  props: GetCoursesByCodeUseCaseProps,
+  suppressNotFoundError: boolean = false
 ): Promise<Course[]> {
   if (
     props.length !==
@@ -26,7 +28,7 @@ export async function getCoursesByCodeUseCase(
     where: props,
     relations: ['recommendedGrades', 'methods', 'schedules'],
   })
-  if (res.length !== props.length)
+  if (res.length !== props.length && !suppressNotFoundError)
     throw new NotFoundError(
       '指定されたidのコースが見つかりませんでした',
       undefined,

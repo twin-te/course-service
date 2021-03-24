@@ -99,6 +99,8 @@ message GetCoursesByCodeRequestCondition {
 
 message GetCoursesByCodeRequest {
   repeated GetCoursesByCodeRequestCondition conditions = 1;
+  /* 一部の講義が見つからない場合でもエラーにせず、見つかった分だけ返す */
+  bool suppressNotFoundError = 2;
 }
 
 message GetCoursesByCodeResponse {

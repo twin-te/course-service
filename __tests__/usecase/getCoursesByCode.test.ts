@@ -38,13 +38,35 @@ test('重複したid', () =>
     ])
   ).rejects.toThrow(InvalidArgumentError))
 
-test('存在しないidの情報は帰らない', () => {
+test('見つからない条件がある場合はエラーになる', () => {
   return expect(
     getCoursesByCodeUseCase([
       { year: 2020, code: 'FOO' },
       { year: 2021, code: initialData[1].code },
     ])
   ).rejects.toThrow(NotFoundError)
+})
+
+test('NotFoundErrorを抑制', async () => {
+  const res = await getCoursesByCodeUseCase(
+    [
+      { year: 2020, code: 'FOO' },
+      { year: 2020, code: initialData[1].code },
+    ],
+    true
+  )
+  expect(res.length).toBe(1)
+})
+
+test('NotFoundErrorを抑制', async () => {
+  const res = await getCoursesByCodeUseCase(
+    [
+      { year: 2020, code: 'FOO' },
+      { year: 2021, code: initialData[1].code },
+    ],
+    true
+  )
+  expect(res.length).toBe(0)
 })
 
 afterAll(() => {
