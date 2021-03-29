@@ -30,7 +30,7 @@ import {
 } from '../../generated'
 import { toGrpcError } from './converter'
 import { searchCourseUseCase } from '../usecase/searchCourse'
-import { Day, Module } from '../database/model/enums'
+import { CourseMethod, Day, Module } from '../database/model/enums'
 
 /**
  * grpcサーバのCourseService実装
@@ -129,8 +129,12 @@ function createGrpcCourse({
   return {
     lastUpdate: lastUpdate.toISOString(),
     recommendedGrades: recommendedGrades.map((r) => r.grade),
-    methods: methods.map((m) => m.method),
-    schedules: (schedules as unknown) as ICourseSchedule[],
+    methods: methods.map((m) => Object.values(CourseMethod).indexOf(m.method)),
+    schedules: schedules.map(({ module, day, ...s }) => ({
+      module: Object.keys(Module).indexOf(module),
+      day: Object.keys(Day).indexOf(day),
+      ...s,
+    })),
     ...c,
   }
 }
