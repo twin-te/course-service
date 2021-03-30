@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 import { CourseRecommendedGrade } from './courseRecommendedGrade'
 import { CourseMethod } from './courseMethod'
 import { CourseSchedule } from './courseSchedule'
@@ -6,6 +12,7 @@ import { CourseSchedule } from './courseSchedule'
 @Entity({
   name: 'courses',
 })
+@Index(['year', 'code'], { unique: true })
 export class Course {
   @PrimaryGeneratedColumn('uuid')
   id!: string
