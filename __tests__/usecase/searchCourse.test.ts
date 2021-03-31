@@ -3,6 +3,7 @@ import { v4 } from 'uuid'
 import { connectDatabase } from '../../src/database'
 import { Course } from '../../src/database/model/course'
 import { Day, Module } from '../../src/database/model/enums'
+import { InvalidArgumentError } from '../../src/error'
 import { createDBCourse } from '../../src/grpc/converter'
 import { searchCourseUseCase, SearchMode } from '../../src/usecase/searchCourse'
 import { clearDB } from '../_cleardb'
@@ -104,8 +105,11 @@ test('キーワード検索単体', async () => {
     year: 2020,
     keywords: ['情報'],
     searchMode: SearchMode.Cover,
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) => expect(c.name.includes('情報')).toBe(true))
 })
 
@@ -114,8 +118,11 @@ test('キーワード複数', async () => {
     year: 2020,
     keywords: ['情報', 'スポーツ'],
     searchMode: SearchMode.Cover,
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     expect(c.name.includes('情報') || c.name.includes('スポーツ')).toBe(true)
   )
@@ -126,9 +133,35 @@ test('キーワードなしで全部', async () => {
     year: 2020,
     keywords: [],
     searchMode: SearchMode.Cover,
+    offset: 0,
+    limit: initialData.length,
   })
   expect(res.length > 0).toBe(true)
   expect(res.length).toBe(initialData.length)
+})
+
+test('不正なoffset', () => {
+  return expect(
+    searchCourseUseCase({
+      year: 2020,
+      keywords: ['情報'],
+      searchMode: SearchMode.Cover,
+      offset: -1,
+      limit: 30,
+    })
+  ).rejects.toThrow(InvalidArgumentError)
+})
+
+test('不正なlimit', () => {
+  return expect(
+    searchCourseUseCase({
+      year: 2020,
+      keywords: ['情報'],
+      searchMode: SearchMode.Cover,
+      offset: 0,
+      limit: 0,
+    })
+  ).rejects.toThrow(InvalidArgumentError)
 })
 
 test('時間割 contain1', async () => {
@@ -144,8 +177,11 @@ test('時間割 contain1', async () => {
         Tue: [false, true, true, false, false, false, false, false, false],
       },
     },
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [
       { module: Module.SpringA, day: Day.Tue, periods: [1, 2] },
@@ -167,8 +203,11 @@ test('時間割 contain2', async () => {
         Tue: [false, false, true, false, false, false, false, false, false],
       },
     },
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [
       { module: Module.SpringA, day: Day.Tue, periods: [2] },
@@ -186,8 +225,11 @@ test('時間割 contain3', async () => {
       SpringA: fillAllDayWith(new Array(7).fill(true)),
       SpringB: fillAllDayWith(new Array(7).fill(true)),
     },
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [
       { module: Module.SpringA },
@@ -204,8 +246,11 @@ test('時間割 contain4', async () => {
     timetable: fillAllModuleWith({
       Intensive: [true, false, false, false, false, false, false],
     }),
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     checkScheduleContain(c, [{ day: Day.Intensive, periods: [0] }])
   )
@@ -221,8 +266,11 @@ test('時間割 cover1', async () => {
         Wed: [false, false, false, false, false, true, true],
       },
     },
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     checkScheduleCover(c, [
       { module: Module.SpringA, day: Day.Wed, periods: [5, 6] },
@@ -240,8 +288,11 @@ test('時間割 cover2', async () => {
         Wed: [false, false, false, false, false, false, true],
       },
     },
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
     checkScheduleCover(c, [
       { module: Module.SpringA, day: Day.Wed, periods: [6] },
@@ -257,8 +308,11 @@ test('時間割 cover3', async () => {
     timetable: {
       SpringA: fillAllDayWith(new Array(7).fill(true)),
     },
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) => checkScheduleCover(c, [{ module: Module.SpringA }]))
 })
 
@@ -270,7 +324,10 @@ test('時間割 cover4', async () => {
     timetable: fillAllModuleWith({
       Intensive: new Array(8).fill(true),
     }),
+    offset: 0,
+    limit: 30,
   })
   expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
   res.forEach((c) => checkScheduleCover(c, [{ day: Day.Intensive }]))
 })

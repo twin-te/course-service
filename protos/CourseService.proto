@@ -150,6 +150,8 @@ message SearchCourseRequest {
     Contain = 1;
   }
   SearchMode searchMode = 4;
+  int32 limit = 5;
+  int32 offset = 6;
 }
 
 message SearchCourseResponse {

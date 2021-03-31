@@ -2,6 +2,7 @@
 import { getConnection, In, Raw } from 'typeorm'
 import { Day, Module } from '../database/model/enums'
 import { Course } from '../database/model/course'
+import { InvalidArgumentError } from '../error'
 
 export enum SearchMode {
   Cover, // 指定した時限と講義の開講日時が一部でも被っていれば対象とみなす
@@ -18,6 +19,8 @@ type Input = {
   keywords: string[]
   year: number
   searchMode: SearchMode
+  limit: number
+  offset: number
 }
 
 export async function searchCourseUseCase({
@@ -25,8 +28,15 @@ export async function searchCourseUseCase({
   timetable,
   keywords,
   searchMode,
+  offset,
+  limit,
 }: Input): Promise<Course[]> {
   const repo = getConnection().getRepository(Course)
+
+  if (offset < 0)
+    throw new InvalidArgumentError('offsetは0以上である必要があります')
+  if (limit < 1)
+    throw new InvalidArgumentError('limitは1以上である必要があります')
 
   // 時間の指定がある場合
   if (timetable) {
@@ -139,6 +149,12 @@ export async function searchCourseUseCase({
     // 人力パースは大変なのでデータを取得するのはTypeORMに任せる
     return repo.findByIds(ids, {
       relations: ['schedules', 'methods', 'recommendedGrades'],
+      order: {
+        year: 'ASC',
+        code: 'ASC',
+      },
+      skip: offset,
+      take: limit,
     })
   } else {
     return repo.find({
@@ -157,6 +173,12 @@ export async function searchCourseUseCase({
           }),
         },
       ],
+      order: {
+        year: 'ASC',
+        code: 'ASC',
+      },
+      skip: offset,
+      take: limit,
     })
   }
 }

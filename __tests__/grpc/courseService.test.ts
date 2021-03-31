@@ -254,15 +254,18 @@ describe('searchCourse', () => {
           Mon: [false, true, true, true, true, true, true],
         },
       },
+      limit: 50,
+      offset: 10,
     }
     const resCourse = createDBCourse(testData[0], 2020, v4())
     mocked(searchCourseUseCase).mockImplementation(
-      async ({ year, searchMode, keywords, timetable }) => {
+      async ({ year, searchMode, keywords, timetable, limit, offset }) => {
         expect(year).toBe(req.year)
         expect(searchMode).toBe(req.searchMode)
         expect(keywords).toEqual(keywords)
         expect(timetable?.SpringA?.Mon).toEqual(req.timetable.SpringA.Mon)
-
+        expect(limit).toBe(req.limit)
+        expect(offset).toBe(req.offset)
         return [resCourse]
       }
     )
