@@ -79,7 +79,30 @@ export function createDBCourse(c: PCourse, year: number, id: string): Course {
     mm.method = m
     return mm
   })
-  target.schedules = c.schedules.map((s) => {
+
+  // 通年かどうか
+  target.isAnnual = !!c.schedules.find((s) => s.module === PModule.Annual)
+
+  // 通年のスケジュールを春ABC秋ABCに変換
+  const schedules = c.schedules
+    .map((s) =>
+      s.module === PModule.Annual
+        ? [
+            PModule.SpringA,
+            PModule.SpringB,
+            PModule.SpringC,
+            PModule.FallA,
+            PModule.FallB,
+            PModule.FallC,
+          ].map((m) => ({
+            ...s,
+            module: m,
+          }))
+        : s
+    )
+    .flat()
+
+  target.schedules = schedules.map((s) => {
     const r = new CourseSchedule()
     r.module = createDBModule(s.module)
     r.day = createDBDay(s.day)

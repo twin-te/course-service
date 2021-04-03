@@ -74,7 +74,7 @@ test('強制更新', async () => {
         compareCourseWithoutId(d!, c)
       })
   )
-})
+}, 10000)
 
 test('不正データ', async () => {
   const brokenData = [...initialData]

@@ -83,6 +83,7 @@ message Course {
   repeated CourseMethod methods = 11;
   repeated CourseSchedule schedules = 12;
   bool hasParseError = 13; // パースエラーが発生した場合（情報の信憑性が薄い場合）trueになる
+  bool isAnnual = 14; // 通年フラグ
 }
 
 message GetCoursesRequest {

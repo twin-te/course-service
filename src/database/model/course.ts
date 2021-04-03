@@ -75,6 +75,13 @@ export class Course {
   })
   hasParseError!: boolean
 
+  @Column({
+    name: 'is_annual',
+    type: 'bool',
+    default: false,
+  })
+  isAnnual!: boolean
+
   @OneToMany(() => CourseRecommendedGrade, (r) => r.courseId, {
     cascade: true,
     onDelete: 'CASCADE',
