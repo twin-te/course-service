@@ -60,32 +60,39 @@ describe('updateCourseDatabase', () => {
         async (_) => testData
       )
       mocked(updateCourseDatabaseUseCase).mockImplementation(
-        async (year, courses) => ({
-          insertedCourses: courses
-            .filter((_, i) => i < courses.length / 5)
-            .map((c) => ({
-              id: v4(),
-              code: c.code,
-              name: c.name,
-            })),
-          updatedCourses: courses
-            .filter((_, i) => i >= courses.length / 5)
-            .map((c) => ({
-              id: v4(),
-              code: c.code,
-              name: c.name,
-            })),
-        })
+        async (year, courses, mandatory) => {
+          expect(year).toBe(2020)
+          expect(mandatory).toBeTruthy()
+          return {
+            insertedCourses: courses
+              .filter((_, i) => i < courses.length / 5)
+              .map((c) => ({
+                id: v4(),
+                code: c.code,
+                name: c.name,
+              })),
+            updatedCourses: courses
+              .filter((_, i) => i >= courses.length / 5)
+              .map((c) => ({
+                id: v4(),
+                code: c.code,
+                name: c.name,
+              })),
+          }
+        }
       )
-      client.updateCourseDatabase({ year: 2020 }, (err, value) => {
-        expect(err).toBeFalsy()
-        expect(value).toBeTruthy()
-        if (!value) throw new Error()
-        expect(value.insertedCourses.length).toBe(testData.length / 5)
-        expect(value.updatedCourses.length).toBe((testData.length / 5) * 4)
+      client.updateCourseDatabase(
+        { year: 2020, mandatory: true },
+        (err, value) => {
+          expect(err).toBeFalsy()
+          expect(value).toBeTruthy()
+          if (!value) throw new Error()
+          expect(value.insertedCourses.length).toBe(testData.length / 5)
+          expect(value.updatedCourses.length).toBe((testData.length / 5) * 4)
 
-        done()
-      })
+          done()
+        }
+      )
     },
     1000 * 60 * 10
   )

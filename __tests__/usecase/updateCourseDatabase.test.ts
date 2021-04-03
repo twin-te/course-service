@@ -56,6 +56,26 @@ test('一部更新', async () => {
   compareCourseWithoutId(i, d!)
 })
 
+test('強制更新', async () => {
+  const res = await updateCourseDatabaseUseCase(2020, initialData, true)
+  expect(res.updatedCourses.length).toBe(initialData.length)
+  expect(res.insertedCourses.length).toBe(0)
+  initialData.forEach((d) =>
+    expect(res.updatedCourses.find((i) => i.code === d.code)).toBeTruthy()
+  )
+  await Promise.all(
+    initialData
+      .map((c) => createDBCourse(c, 2020, ''))
+      .map(async (c) => {
+        const d = await courseRepo.findOne(
+          { year: 2020, code: c.code },
+          { relations: ['recommendedGrades', 'methods', 'schedules'] }
+        )
+        compareCourseWithoutId(d!, c)
+      })
+  )
+})
+
 test('不正データ', async () => {
   const brokenData = [...initialData]
   brokenData[0].code = 'GB00002'

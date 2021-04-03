@@ -22,8 +22,6 @@ import {
   GetCoursesByCodeResponse,
   GetCoursesResponse,
   ICourse,
-  ICourseSchedule,
-  ISearchCourseRequestModules,
   ListAllCoursesResponse,
   SearchCourseResponse,
   UpdateCourseDatabaseResponse,
@@ -41,7 +39,8 @@ export const courseService: GrpcServer<CourseService> = applyLogger({
       const courses = await fetchCoursesFromKdbUseCase(request.year)
       const updateResult = await updateCourseDatabaseUseCase(
         request.year,
-        courses
+        courses,
+        request.mandatory
       )
       callback(
         null,

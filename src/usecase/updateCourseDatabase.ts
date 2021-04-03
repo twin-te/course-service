@@ -20,10 +20,12 @@ type UpdateCourseDatabaseResult = {
  * 与えられた情報からデータベースを更新する
  * @param year 更新年次
  * @param courses parserで解析された開講情報
+ * @param 更新不要の場合でも強制的に更新する
  */
 export async function updateCourseDatabaseUseCase(
   year: number,
-  courses: ParsedCourse[]
+  courses: ParsedCourse[],
+  mandatory: boolean = false
 ): Promise<UpdateCourseDatabaseResult> {
   const result: UpdateCourseDatabaseResult = {
     insertedCourses: [],
@@ -40,7 +42,11 @@ export async function updateCourseDatabaseUseCase(
       // 新規の場合
       if (!target) target = createDBCourse(c, year, v4())
       // 更新不要の場合何もしない
-      else if (target.lastUpdate.getTime() >= c.lastUpdate.getTime()) continue
+      else if (
+        target.lastUpdate.getTime() >= c.lastUpdate.getTime() &&
+        !mandatory
+      )
+        continue
       else target = createDBCourse(c, year, target.id)
 
       await courseRepository.save(target)

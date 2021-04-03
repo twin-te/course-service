@@ -42,6 +42,7 @@ enum Day {
 
 message UpdateCourseDatabaseRequest {
   int32 year = 1; // 対象年度
+  bool mandatory = 2; //強制更新
 }
 
 message UpdateCourseDatabaseResponse {
