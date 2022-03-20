@@ -23,6 +23,27 @@ type Input = {
   offset: number
 }
 
+const escapeRegex = (str: string) =>
+  str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+
+/**
+ * 指定されたキーワードをすべて含む文字列にヒットする正規表現を生成
+ * 肯定先読みを使って順不同andを実装
+ * 授業名等の検索で使用
+ */
+const searchNameRegexp = (names: string[]) =>
+  '^' +
+  names
+    .map(escapeRegex)
+    .map((n) => `(?=.*${n})`)
+    .join('')
+
+/**
+ * 指定された科目番号に前方一致でヒットする正規表現を生成
+ */
+const searchCodeRegexp = (codes: string[]) =>
+  `^(${codes.map(escapeRegex).join('|')})`
+
 export async function searchCourseUseCase({
   year,
   timetable,
@@ -74,7 +95,7 @@ export async function searchCourseUseCase({
           join course_schedules as s on s.course_id=courses.id
         where
           courses.year = :year and
-          (courses.name ~* :keywords or courses.code ~* :keywords) AND
+          (courses.name ~* :names or courses.code ~* :codes) AND
           (
             ${conditions
               .map(
@@ -106,7 +127,7 @@ export async function searchCourseUseCase({
         join course_schedules as s on s.course_id=courses.id
       where
         courses.year = :year and
-        (courses.name ~* :keywords or courses.code ~* :keywords) and (
+        (courses.name ~* :names or courses.code ~* :codes) and (
         ${conditions
           .map(
             ({ periods }, i) => `(
@@ -128,7 +149,11 @@ export async function searchCourseUseCase({
       )
       `
 
-    const parameters: any = { keywords: keywords.join('|'), year }
+    const parameters: any = {
+      names: searchNameRegexp(keywords),
+      codes: searchCodeRegexp(keywords),
+      year,
+    }
     conditions.forEach(({ module, day, periods }, i) => {
       parameters[`m_${i}`] = module
       parameters[`d_${i}`] = day
@@ -162,14 +187,14 @@ export async function searchCourseUseCase({
       where: [
         {
           year,
-          name: Raw((alias) => `${alias} ~* :keywords`, {
-            keywords: keywords.join('|'),
+          name: Raw((alias) => `${alias} ~* :names`, {
+            names: searchNameRegexp(keywords),
           }),
         },
         {
           year,
-          code: Raw((alias) => `${alias} ~* :keywords`, {
-            keywords: keywords.join('|'),
+          code: Raw((alias) => `${alias} ~* :codes`, {
+            codes: searchCodeRegexp(keywords),
           }),
         },
       ],

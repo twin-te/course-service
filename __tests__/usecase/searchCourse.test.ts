@@ -116,7 +116,7 @@ test('キーワード検索単体', async () => {
 test('キーワード複数', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
-    keywords: ['情報', 'スポーツ'],
+    keywords: ['情報', '人工知能'],
     searchMode: SearchMode.Cover,
     offset: 0,
     limit: 30,
@@ -124,7 +124,7 @@ test('キーワード複数', async () => {
   expect(res.length > 0).toBe(true)
   expect(res.length <= 30).toBe(true)
   res.forEach((c) =>
-    expect(c.name.includes('情報') || c.name.includes('スポーツ')).toBe(true)
+    expect(c.name.includes('情報') && c.name.includes('人工知能')).toBe(true)
   )
 })
 
