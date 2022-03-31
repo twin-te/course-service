@@ -41,7 +41,7 @@
     "log4js": "^6.3.0",
     "pg": "^8.5.1",
     "reflect-metadata": "^0.1.13",
-    "twinte-parser": "^2.2.0",
+    "twinte-parser": "^2.3.0",
     "typeorm": "^0.2.29",
     "uuid": "^8.3.2",
     "protobufjs": "github:iFwu/protobuf.js"
