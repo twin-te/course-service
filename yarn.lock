@@ -5694,10 +5694,10 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=
 
-twinte-parser@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/twinte-parser/-/twinte-parser-2.2.0.tgz#d31fab05617e3b44df1acb97368cc3c6c273370c"
-  integrity sha512-tp9i3V6QOxUTE2xjneosm6vzx82L1ioN4m+Bylg5RlXK13db2XnCixvmebApCW6wIgVAOXROxlR26bC2coViWw==
+twinte-parser@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/twinte-parser/-/twinte-parser-2.3.0.tgz#cbf16e458819c99726e2f03a296e3a2c63229e5d"
+  integrity sha512-c70rvpzX/lq74Be6UHO5lcnF7O0C4a7IavT523gAhrp0HG6g22YOUqxgo1LBSL52UCdwrGUaA0x4RjBsiIfmAg==
   dependencies:
     axios "^0.21.1"
     axios-cookiejar-support "^1.0.1"
