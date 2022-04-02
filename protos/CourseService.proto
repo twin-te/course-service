@@ -146,6 +146,7 @@ message SearchCourseRequestTimetable {
 message SearchCourseRequest {
   int32 year = 1;
   repeated string keywords = 2;
+  repeated string codes = 7;
   SearchCourseRequestTimetable timetable = 3;
   enum SearchMode {
     Cover = 0;
