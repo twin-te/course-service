@@ -1,27 +1,8 @@
 /* eslint-disable camelcase */
-import { getConnection, In, Raw } from 'typeorm'
+import { FindOneOptions, getConnection, In, Raw } from 'typeorm'
 import { Day, Module } from '../database/model/enums'
 import { Course } from '../database/model/course'
 import { InvalidArgumentError } from '../error'
-
-export enum SearchMode {
-  Cover, // 指定した時限と講義の開講日時が一部でも被っていれば対象とみなす
-  Contain, // 指定した時限に収まっている講義のみ対象とみなす
-}
-
-type Input = {
-  /** 存在しない場合は全時限対象 */
-  timetable?: {
-    [module in keyof typeof Module]?: {
-      [day in keyof typeof Day]?: boolean[] // bool配列は[0限, 1限, ... , 8限] (0限は時限情報が無い講義に与えられている)
-    }
-  }
-  keywords: string[]
-  year: number
-  searchMode: SearchMode
-  limit: number
-  offset: number
-}
 
 const escapeRegex = (str: string) =>
   str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
@@ -44,10 +25,60 @@ const searchNameRegexp = (names: string[]) =>
 const searchCodeRegexp = (codes: string[]) =>
   `^(${codes.map(escapeRegex).join('|')})`
 
+/**
+ * キーワードと科目番号で検索する条件sqlを生成
+ */
+const keywordCodeQuery = (keywords: string[], codes: string[]): string => {
+  // どちらも指定がなければ空文字を返す
+  if (keywords.length === 0 && codes.length === 0) return ''
+
+  // keywordかcodesが指定されていれば条件に加える（両方あればandで連結）
+  const conditionQuery = [
+    ifstr(keywords.length > 0, 'courses.name ~* :names'),
+    ifstr(codes.length > 0, 'courses.code ~* :codes'),
+  ]
+    .filter(notNull)
+    .join('and')
+
+  // 最後に()で囲んでandを足す
+  // 出力例 (courses.name ~* :names and courses.code ~* :codes) and
+  return `(${conditionQuery}) and `
+}
+
+/**
+ * 条件がtrueなら与えられた文字列、falseならnullを返すユーティリティ関数
+ */
+const ifstr = (cond: boolean, str: string) => (cond ? str : null)
+/**
+ * notNullを通すフィルタ
+ */
+const notNull = <T>(o: T | null): o is T => o !== null
+
+export enum SearchMode {
+  Cover, // 指定した時限と講義の開講日時が一部でも被っていれば対象とみなす
+  Contain, // 指定した時限に収まっている講義のみ対象とみなす
+}
+
+type Input = {
+  /** 存在しない場合は全時限対象 */
+  timetable?: {
+    [module in keyof typeof Module]?: {
+      [day in keyof typeof Day]?: boolean[] // bool配列は[0限, 1限, ... , 8限] (0限は時限情報が無い講義に与えられている)
+    }
+  }
+  keywords: string[]
+  codes: string[]
+  year: number
+  searchMode: SearchMode
+  limit: number
+  offset: number
+}
+
 export async function searchCourseUseCase({
   year,
   timetable,
   keywords,
+  codes,
   searchMode,
   offset,
   limit,
@@ -95,7 +126,7 @@ export async function searchCourseUseCase({
           join course_schedules as s on s.course_id=courses.id
         where
           courses.year = :year and
-          (courses.name ~* :names or courses.code ~* :codes) AND
+          ${keywordCodeQuery(keywords, codes) /* and */}
           (
             ${conditions
               .map(
@@ -127,7 +158,8 @@ export async function searchCourseUseCase({
         join course_schedules as s on s.course_id=courses.id
       where
         courses.year = :year and
-        (courses.name ~* :names or courses.code ~* :codes) and (
+        ${keywordCodeQuery(keywords, codes) /* and */}
+        (
         ${conditions
           .map(
             ({ periods }, i) => `(
@@ -151,7 +183,7 @@ export async function searchCourseUseCase({
 
     const parameters: any = {
       names: searchNameRegexp(keywords),
-      codes: searchCodeRegexp(keywords),
+      codes: searchCodeRegexp(codes),
       year,
     }
     conditions.forEach(({ module, day, periods }, i) => {
@@ -182,22 +214,20 @@ export async function searchCourseUseCase({
       take: limit,
     })
   } else {
+    const conditions: FindOneOptions<Course>['where'] = { year }
+    // FindOneOptionsにundefinedを割り当てるとsqlパラメータではnullとして解釈されるので必要なときだけプロパティを定義
+    if (keywords.length > 0)
+      conditions.name = Raw((alias) => `${alias} ~* :names`, {
+        names: searchNameRegexp(keywords),
+      })
+    if (codes.length > 0)
+      conditions.code = Raw((alias) => `${alias} ~* :codes`, {
+        codes: searchCodeRegexp(codes),
+      })
+
     return repo.find({
       relations: ['schedules', 'methods', 'recommendedGrades'],
-      where: [
-        {
-          year,
-          name: Raw((alias) => `${alias} ~* :names`, {
-            names: searchNameRegexp(keywords),
-          }),
-        },
-        {
-          year,
-          code: Raw((alias) => `${alias} ~* :codes`, {
-            codes: searchCodeRegexp(keywords),
-          }),
-        },
-      ],
+      where: conditions,
       order: {
         year: 'ASC',
         code: 'ASC',
