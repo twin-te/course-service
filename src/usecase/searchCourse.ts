@@ -38,7 +38,7 @@ const keywordCodeQuery = (keywords: string[], codes: string[]): string => {
     ifstr(codes.length > 0, 'courses.code ~* :codes'),
   ]
     .filter(notNull)
-    .join('and')
+    .join(' and ')
 
   // 最後に()で囲んでandを足す
   // 出力例 (courses.name ~* :names and courses.code ~* :codes) and
