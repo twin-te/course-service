@@ -215,6 +215,33 @@ test('不正なlimit', () => {
   ).rejects.toThrow(InvalidArgumentError)
 })
 
+test('キーワード指定&科目番号指定&時間割', async () => {
+  const res = await searchCourseUseCase({
+    year: 2020,
+    keywords: ['科学'],
+    codes: ['FF'],
+    timetable: {
+      FallA: {
+        Thu: [false, true, false, false, false, false, false, false, false],
+      },
+      FallB: {
+        Thu: [false, true, false, false, false, false, false, false, false],
+      },
+      FallC: {
+        Thu: [false, true, false, false, false, false, false, false, false],
+      },
+    },
+    searchMode: SearchMode.Contain,
+    offset: 0,
+    limit: 30,
+  })
+  expect(res.length > 0).toBe(true)
+  expect(res.length <= 30).toBe(true)
+  res.forEach((c) =>
+    expect(c.name.includes('科学') && c.code.startsWith('FF')).toBe(true)
+  )
+})
+
 test('時間割 contain1', async () => {
   const res = await searchCourseUseCase({
     year: 2020,
