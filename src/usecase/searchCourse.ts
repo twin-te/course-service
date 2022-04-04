@@ -22,8 +22,17 @@ const searchNameRegexp = (names: string[]) =>
 /**
  * 指定された科目番号に前方一致でヒットする正規表現を生成
  */
-const searchCodeRegexp = (codes: string[]) =>
-  `^(${codes.map(escapeRegex).join('|')})`
+const searchCodeRegexp = (codes: string[]) => {
+  const positive = codes.filter((c) => !c.startsWith('-')).map(escapeRegex)
+  const negative = codes
+    .filter((c) => c.startsWith('-'))
+    .map((c) => c.substring(1))
+    .map(escapeRegex)
+  let exp = '^'
+  if (positive.length > 0) exp += `(?=${positive.join('|')})`
+  if (negative.length > 0) exp += `(?!${negative.join('|')})`
+  return exp
+}
 
 /**
  * キーワードと科目番号で検索する条件sqlを生成
